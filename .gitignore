@@ -1,0 +1,45 @@
+
+# ============================================
+# SERENITY SPA - Git Ignore
+# ============================================
+
+# Dependencias
+node_modules/
+vendor/
+
+# Entorno
+.env
+.env.local
+.env.*.local
+
+# Logs
+*.log
+logs/
+error_log
+access_log
+
+# Archivos del sistema
+.DS_Store
+Thumbs.db
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Archivos temporales
+*.tmp
+*.temp
+cache/
+
+# Base de datos local
+*.sqlite
+*.sqlite3
+
+# Subidas (en desarrollo, en producción se configura diferente)
+# uploads/
+
+# Archivos de compilación
+dist/
+build/

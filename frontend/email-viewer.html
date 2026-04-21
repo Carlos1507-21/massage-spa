@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bandeja de Entrada - Emails Serenity Spa</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #2d5a4a 0%, #1a3d32 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        .header {
+            background: linear-gradient(135deg, #2d5a4a, #1a3d32);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+        .header h1 { font-size: 1.8rem; margin-bottom: 10px; }
+        .header p { opacity: 0.9; font-size: 0.95rem; }
+        .toolbar {
+            background: #f8f9fa;
+            padding: 15px 30px;
+            border-bottom: 1px solid #ddd;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .btn-primary {
+            background: #2d5a4a;
+            color: white;
+        }
+        .btn-primary:hover { background: #1a3d32; }
+        .btn-danger {
+            background: #e74c3c;
+            color: white;
+        }
+        .btn-danger:hover { background: #c0392b; }
+        .btn-secondary {
+            background: #95a5a6;
+            color: white;
+        }
+        .btn-secondary:hover { background: #7f8c8d; }
+        .email-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .email-item {
+            padding: 20px 30px;
+            border-bottom: 1px solid #eee;
+            cursor: pointer;
+            transition: background 0.2s;
+            display: flex;
+            gap: 15px;
+            align-items: flex-start;
+        }
+        .email-item:hover { background: #f8f9fa; }
+        .email-item.unread {
+            background: #e8f5e9;
+            border-left: 4px solid #27ae60;
+        }
+        .email-icon {
+            width: 50px;
+            height: 50px;
+            background: #e8f5e9;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+        }
+        .email-info { flex: 1; }
+        .email-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 5px;
+        }
+        .email-subject {
+            font-weight: 600;
+            color: #2c3e50;
+            font-size: 1rem;
+        }
+        .email-date {
+            color: #95a5a6;
+            font-size: 0.85rem;
+        }
+        .email-to {
+            color: #27ae60;
+            font-size: 0.9rem;
+            font-weight: 500;
+        }
+        .email-preview {
+            color: #7f8c8d;
+            font-size: 0.9rem;
+            margin-top: 5px;
+        }
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: #95a5a6;
+        }
+        .empty-state-icon { font-size: 4rem; margin-bottom: 20px; }
+        .email-detail {
+            display: none;
+            padding: 30px;
+            background: #f8f9fa;
+        }
+        .email-detail.active { display: block; }
+        .email-detail-header {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .email-detail-row {
+            display: flex;
+            margin: 10px 0;
+            font-size: 0.95rem;
+        }
+        .email-detail-label {
+            width: 100px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+        .email-detail-value { color: #555; }
+        .email-content {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        .back-btn {
+            margin-bottom: 20px;
+        }
+        .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            margin-left: 10px;
+        }
+        .badge-client { background: #3498db; color: white; }
+        .badge-admin { background: #e74c3c; color: white; }
+        .stats {
+            display: flex;
+            gap: 20px;
+            padding: 20px 30px;
+            background: white;
+            border-bottom: 1px solid #eee;
+        }
+        .stat-item {
+            text-align: center;
+        }
+        .stat-number {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #2d5a4a;
+        }
+        .stat-label {
+            color: #7f8c8d;
+            font-size: 0.85rem;
+        }
+        @media (max-width: 600px) {
+            .toolbar { flex-direction: column; align-items: stretch; }
+            .btn { width: 100%; justify-content: center; }
+            .email-header { flex-direction: column; align-items: flex-start; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>📧 Bandeja de Entrada</h1>
+            <p>Emails enviados por Serenity Spa (modo demo)</p>
+        </div>
+
+        <div class="stats" id="stats">
+            <div class="stat-item">
+                <div class="stat-number" id="totalEmails">0</div>
+                <div class="stat-label">Total</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number" id="unreadEmails">0</div>
+                <div class="stat-label">Sin leer</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number" id="clientEmails">0</div>
+                <div class="stat-label">A clientes</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number" id="adminEmails">0</div>
+                <div class="stat-label">Al admin</div>
+            </div>
+        </div>
+
+        <div class="toolbar">
+            <button class="btn btn-primary" onclick="refreshEmails()">🔄 Actualizar</button>
+            <button class="btn btn-secondary" onclick="exportEmails()">📥 Exportar</button>
+            <button class="btn btn-danger" onclick="clearAllEmails()">🗑️ Limpiar todo</button>
+        </div>
+
+        <div id="emailList" class="email-list">
+            <!-- Se llena con JS -->
+        </div>
+
+        <div id="emailDetail" class="email-detail">
+            <button class="btn btn-secondary back-btn" onclick="showList()">← Volver a la lista</button>
+            <div id="detailContent"></div>
+        </div>
+    </div>
+
+    <script>
+        // Cargar emails al iniciar
+        document.addEventListener('DOMContentLoaded', loadEmails);
+
+        function loadEmails() {
+            const inbox = JSON.parse(localStorage.getItem('serenity_spa_inbox') || '[]');
+            const emails = JSON.parse(localStorage.getItem('serenity_spa_emails') || '[]');
+
+            updateStats(inbox);
+            renderEmailList(inbox);
+        }
+
+        function updateStats(inbox) {
+            const total = inbox.length;
+            const unread = inbox.filter(e => !e.read).length;
+            const client = inbox.filter(e => e.type !== 'admin').length;
+            const admin = inbox.filter(e => e.type === 'admin').length;
+
+            document.getElementById('totalEmails').textContent = total;
+            document.getElementById('unreadEmails').textContent = unread;
+            document.getElementById('clientEmails').textContent = client;
+            document.getElementById('adminEmails').textContent = admin;
+        }
+
+        function renderEmailList(inbox) {
+            const list = document.getElementById('emailList');
+
+            if (inbox.length === 0) {
+                list.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📭</div>
+                        <h3>No hay emails</h3>
+                        <p>Haz una reserva en el sitio web para generar emails.</p>
+                        <a href="index.html" style="color: #2d5a4a; display: inline-block; margin-top: 15px;">Ir al sitio web →</a>
+                    </div>
+                `;
+                return;
+            }
+
+            list.innerHTML = inbox.map(email => `
+                <div class="email-item ${!email.read ? 'unread' : ''}" onclick="viewEmail(${email.id})">
+                    <div class="email-icon">${email.type === 'admin' ? '🔔' : '✉️'}</div>
+                    <div class="email-info">
+                        <div class="email-header">
+                            <span class="email-subject">
+                                ${email.subject}
+                                <span class="badge badge-${email.type === 'admin' ? 'admin' : 'client'}">${email.type === 'admin' ? 'Admin' : 'Cliente'}</span>
+                            </span>
+                            <span class="email-date">${new Date(email.timestamp).toLocaleString('es-CL')}</span>
+                        </div>
+                        <div class="email-to">Para: ${email.from}</div>
+                        <div class="email-preview">${email.preview}</div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function viewEmail(id) {
+            const inbox = JSON.parse(localStorage.getItem('serenity_spa_inbox') || '[]');
+            const email = inbox.find(e => e.id === id);
+
+            if (!email) return;
+
+            // Marcar como leído
+            email.read = true;
+            localStorage.setItem('serenity_spa_inbox', JSON.stringify(inbox));
+
+            // Mostrar detalle
+            document.getElementById('emailList').style.display = 'none';
+            document.getElementById('stats').style.display = 'none';
+            document.querySelector('.toolbar').style.display = 'none';
+            document.getElementById('emailDetail').classList.add('active');
+
+            document.getElementById('detailContent').innerHTML = `
+                <div class="email-detail-header">
+                    <div class="email-detail-row">
+                        <div class="email-detail-label">De:</div>
+                        <div class="email-detail-value">Serenity Spa <reservas@serenityspa.cl></div>
+                    </div>
+                    <div class="email-detail-row">
+                        <div class="email-detail-label">Para:</div>
+                        <div class="email-detail-value">${email.from}</div>
+                    </div>
+                    <div class="email-detail-row">
+                        <div class="email-detail-label">Asunto:</div>
+                        <div class="email-detail-value">${email.subject}</div>
+                    </div>
+                    <div class="email-detail-row">
+                        <div class="email-detail-label">Fecha:</div>
+                        <div class="email-detail-value">${new Date(email.timestamp).toLocaleString('es-CL')}</div>
+                    </div>
+                    <div class="email-detail-row">
+                        <div class="email-detail-label">Tipo:</div>
+                        <div class="email-detail-value">${email.type === 'admin' ? 'Notificación Admin' : 'Confirmación Cliente'}</div>
+                    </div>
+                </div>
+                <div class="email-content">
+                    ${email.html || '<p>Ver consola del navegador para el contenido HTML completo.</p>'}
+                </div>
+            `;
+
+            updateStats(inbox);
+        }
+
+        function showList() {
+            document.getElementById('emailList').style.display = 'block';
+            document.getElementById('stats').style.display = 'flex';
+            document.querySelector('.toolbar').style.display = 'flex';
+            document.getElementById('emailDetail').classList.remove('active');
+            loadEmails();
+        }
+
+        function refreshEmails() {
+            loadEmails();
+            alert('📧 Emails actualizados');
+        }
+
+        function exportEmails() {
+            const emails = JSON.parse(localStorage.getItem('serenity_spa_emails') || '[]');
+
+            if (emails.length === 0) {
+                alert('No hay emails para exportar');
+                return;
+            }
+
+            let content = 'SERENITY SPA - EMAIL LOG\n';
+            content += '========================\n\n';
+
+            emails.forEach(email => {
+                content += `[${new Date(email.timestamp).toLocaleString()}]\n`;
+                content += `Tipo: ${email.type}\n`;
+                content += `Para: ${email.to}\n`;
+                content += `Asunto: ${email.subject}\n`;
+                content += `Estado: ${email.status}\n`;
+                content += '-'.repeat(50) + '\n\n';
+            });
+
+            const blob = new Blob([content], { type: 'text/plain' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `emails-log-${new Date().toISOString().split('T')[0]}.txt`;
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function clearAllEmails() {
+            if (confirm('¿Seguro que quieres eliminar TODOS los emails?')) {
+                localStorage.removeItem('serenity_spa_emails');
+                localStorage.removeItem('serenity_spa_inbox');
+                localStorage.removeItem('serenity_spa_reservations');
+                loadEmails();
+                alert('🗑️ Todos los emails han sido eliminados');
+            }
+        }
+
+        // Auto-refresh cada 5 segundos
+        setInterval(loadEmails, 5000);
+    </script>
+</body>
+</html>

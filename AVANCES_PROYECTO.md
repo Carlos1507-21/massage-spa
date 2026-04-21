@@ -1,0 +1,286 @@
+# 🌿 Serenity Spa - Registro de Avances del Proyecto
+
+**Fecha última actualización:** 2026-04-14
+**Estado:** Panel de administración COMPLETO agregado
+**Próxima sesión:** Revisar panel admin o continuar con otras funcionalidades
+
+---
+
+## ✅ Lo que ya está construido
+
+### 1. Estructura de carpetas (Buenas prácticas)
+```
+massage-spa/
+├── frontend/           → Interfaz de usuario (HTML/CSS/JS)
+├── backend/            → API y lógica del servidor (PHP)
+│   ├── 📂 api/           → Endpoints REST
+│   │   ├── reservations.php
+│   │   └── auth.php      # Login/logout/check
+│   ├── 📂 models/        → Clases de datos
+│   │   └── Reservation.php
+│   ├── 📂 config/        → Configuración BD
+│   └── 📂 middleware/    → Autenticación lista
+│       └── Auth.php
+├── 📂 admin/             # ⭐ NUEVO: PANEL DE ADMIN
+│   ├── login.html        # Página de login
+│   ├── dashboard.html    # Dashboard principal
+│   ├── 📂 css/
+│   │   └── admin.css     # Estilos del panel (~900 líneas)
+│   └── 📂 js/
+│       └── admin.js      # Lógica del panel
+└── 📂 docs/              → Documentación
+```
+
+### 2. Frontend completo (100%)
+
+**Página principal (`frontend/index.html`):**
+- ✅ Header fijo con navegación suave
+- ✅ Hero section con gradiente verde (#2d5a4a → #1a3d32)
+- ✅ Sección de 6 servicios de masajes:
+  - Masaje Relajante ($45.000)
+  - Masaje Terapéutico POPULAR ($55.000)
+  - Aromaterapia ($50.000)
+  - Piedras Calientes ($60.000)
+  - Reflexología Podal ($35.000)
+  - Masaje Prenatal ($50.000)
+- ✅ Beneficios del masaje regular (4 items con iconos)
+- ✅ Sección "Nosotros" con estadísticas (6+ años, 5000+ clientes, 8 terapeutas)
+- ✅ Testimonios (3 tarjetas)
+- ✅ Formulario de reservas (nombre, email, teléfono, servicio, fecha, hora, mensaje)
+- ✅ Footer con redes sociales
+
+**CSS (`frontend/css/`):**
+- ✅ `style.css` - Estilos completos (~550 líneas)
+- ✅ `responsive.css` - Breakpoints: 992px, 768px, 480px
+- ✅ Variables CSS con tema spa:
+  - Verde primario: #2d5a4a
+  - Dorado acento: #c9a96e
+  - Fondo crema: #faf7f2
+- ✅ Animaciones: fadeIn, bounce, scroll indicator
+- ✅ Efectos hover en tarjetas
+
+**JavaScript (`frontend/js/main.js`):**
+- ✅ Menú hamburguesa para móvil
+- ✅ Smooth scrolling entre secciones
+- ✅ Header con efecto glass al hacer scroll
+- ✅ Validación de formulario
+- ✅ Notificaciones toast (éxito/error)
+- ✅ Intersection Observer para animaciones
+- ✅ Configuración de fecha mínima (mañana)
+
+### 3. Backend API (PHP)
+
+**Configuración (`backend/config/database.php`):**
+- ✅ Conexión PDO con opciones de seguridad
+- ✅ Función `initDatabase()` para crear tablas:
+  - `reservations`: id, name, email, phone, service, reservation_date, reservation_time, message, status, timestamps
+  - `contact_messages`: para futuro formulario de contacto
+
+**Modelo (`backend/models/Reservation.php`):**
+- ✅ Clase con métodos:
+  - `create()` - Crear reserva
+  - `getAll()` - Listar todas (con filtro opcional por status)
+  - `getById()` - Obtener una
+  - `updateStatus()` - Cambiar estado (pending/confirmed/cancelled)
+  - `delete()` - Eliminar
+  - `checkAvailability()` - Verificar si hora está libre
+
+**API REST (`backend/api/reservations.php`):**
+- ✅ Endpoints funcionales:
+  - GET - Listar / Obtener una
+  - POST - Crear nueva
+  - PUT - Actualizar estado
+  - DELETE - Eliminar
+- ✅ Headers CORS configurados
+- ✅ Validación de datos
+- ✅ Respuestas JSON consistentes
+
+### 4. PANEL DE ADMINISTRACIÓN COMPLETO (NUEVO - Abril 2025)
+
+**Estructura (`admin/`):**
+- ✅ `login.html` - Página de login con diseño spa
+- ✅ `dashboard.html` - Dashboard con sidebar y 4 secciones
+- ✅ `css/admin.css` - Estilos completos (~900 líneas, responsive)
+- ✅ `js/admin.js` - Lógica completa del panel
+
+**Backend auth actualizado:**
+- ✅ `backend/middleware/Auth.php` - Clase de autenticación con bcrypt
+- ✅ `backend/api/auth.php` - Endpoints login/logout/check
+
+**Características del panel:**
+- 🔐 **Login seguro:**
+  - Usuario: `admin`
+  - Contraseña: `password` (en producción usar hash bcrypt)
+  - Toggle mostrar/ocultar contraseña
+  - Estado "Recordarme"
+
+- 📊 **Dashboard con estadísticas:**
+  - Reservas pendientes (con badge en sidebar)
+  - Reservas confirmadas
+  - Citas de hoy
+  - Ingresos estimados del mes
+  - Gráficos visuales con cards
+
+- 📋 **Gestión de reservas completa:**
+  - Tabla con todas las reservas
+  - Filtros por estado: Todas/Pendientes/Confirmadas/Canceladas
+  - Búsqueda en tiempo real
+  - Botones de acción: Ver detalle, Confirmar, Cancelar
+  - Modal con información completa del cliente
+
+- 📅 **Próximas citas:**
+  - Lista de citas de hoy + 7 días
+  - Agrupadas por fecha
+
+- 🔔 **Sistema de notificaciones:**
+  - Badge con cantidad de pendientes
+  - Toast notifications (éxito/error)
+
+- 📱 **Responsive:**
+  - Sidebar colapsable en móvil
+  - Menú hamburguesa
+  - Tabla con scroll horizontal
+
+- 🚪 **Logout seguro**
+
+**Secciones del panel:**
+| Sección | Estado | Descripción |
+|---------|--------|-------------|
+| Dashboard | ✅ Listo | Resumen y estadísticas |
+| Reservas | ✅ Listo | Gestión completa con tabla |
+| Servicios | 🚧 Placeholder | Para futura edición de servicios |
+| Reportes | 🚧 Placeholder | Para futuros reportes avanzados |
+
+### 5. Archivos de proyecto
+- ✅ `.htaccess` - Configuración Apache + seguridad
+- ✅ `.gitignore` - Exclusiones para Git
+- ✅ `README.md` - Documentación completa
+- ✅ `AVANCES_PROYECTO.md` - Este archivo
+
+---
+
+## 🔧 Cómo probarlo
+
+### Opción A: Solo Frontend (sin servidor)
+1. Abrir `frontend/index.html` directamente en navegador
+2. Ver diseño, navegación, animaciones
+3. El formulario muestra notificación toast pero no guarda en BD (normal)
+
+### Opción B: Panel de Administración (sin servidor backend)
+1. Abrir `admin/login.html` directamente en navegador
+2. Ingresar: usuario `admin`, contraseña `password`
+3. Ver dashboard con datos de demostración
+4. Navegar entre secciones, ver tabla de reservas
+5. Los cambios son simulados (no persisten sin BD)
+
+### Opción C: Con servidor local (completo)
+1. Instalar XAMPP/WAMP/MAMP
+2. Copiar proyecto a `htdocs/`
+3. Crear BD `serenity_spa` en MySQL
+4. Ejecutar `initDatabase()` para crear tablas
+5. Acceder a:
+   - Sitio web: `http://localhost/massage-spa/frontend/`
+   - Panel admin: `http://localhost/massage-spa/admin/login.html`
+
+---
+
+## 📋 Decisiones técnicas tomadas
+
+**Diseño:**
+- Paleta verde/dorado para transmitir tranquilidad y lujo
+- Tipografía: Playfair Display (títulos) + Open Sans (cuerpo)
+- Mobile-first con breakpoints estándar
+- Sin frameworks CSS (vanilla) para control total
+
+**Backend:**
+- PHP puro con PDO (no frameworks) - simple y portable
+- MySQL como base de datos
+- API RESTful con endpoints claros
+- Prepared statements contra SQL Injection
+- Autenticación con sesiones PHP + bcrypt
+
+**Frontend-Backend:**
+- El formulario apunta a `../backend/api/reservations.php`
+- JavaScript hace fetch POST con JSON
+- Si no hay servidor, funciona en modo demo con datos de ejemplo
+
+**Panel de administración:**
+- Separado del frontend principal (carpeta `admin/`)
+- Mismo tema visual para consistencia de marca
+- Protección por sesión (redirige a login si no está autenticado)
+- Datos de demostración cuando no hay conexión a BD
+
+---
+
+## 🎯 Para la próxima sesión
+
+### Posibles siguientes pasos (pendiente decisión del usuario):
+
+**A. Contenido y diseño:**
+- [ ] Agregar imágenes reales (ahora son placeholders)
+- [ ] Cambiar colores si no le gustan
+- [ ] Agregar más servicios
+- [ ] Crear página "Nosotros" separada
+- [ ] Agregar galería de fotos
+
+**B. Funcionalidad backend:**
+- [x] Panel de administración ✅ COMPLETADO
+- [ ] Enviar emails de confirmación
+- [ ] Integrar con calendario (Google Calendar API)
+- [ ] Historial de reservas por cliente
+- [ ] Sistema de cupones/descuentos
+
+**C. Panel de admin (mejoras):**
+- [ ] Completar sección "Servicios" (CRUD servicios)
+- [ ] Completar sección "Reportes" (gráficos, exportar Excel/PDF)
+- [ ] Gestión de terapeutas/empleados
+- [ ] Configuración de horarios de atención
+- [ ] Backup/exportar base de datos
+
+**D. Técnicos:**
+- [ ] Configurar servidor de producción
+- [ ] SSL/HTTPS
+- [ ] Backup automático de BD
+- [ ] Tests unitarios
+
+**E. Integraciones:**
+- [ ] WhatsApp Business API para notificaciones
+- [ ] Pasarela de pagos (WebPay, MercadoPago)
+- [ ] Google Maps con ubicación real
+
+---
+
+## 📝 Notas importantes
+
+- El usuario pidió spa de masajes → se creó "Serenity Spa"
+- El usuario pidió estructura con frontend/backend → se hizo separación clara
+- El usuario pidió panel de administración → se creó completo con login, dashboard y gestión de reservas
+- El formulario de reservas está funcional pero guarda en BD solo con servidor PHP
+- Todas las rutas son relativas (../backend/api/) para funcionar en subcarpetas
+- El menú hamburguesa solo se ve en móvil (< 768px)
+- Hay comentarios TODO en el código marcando futuras mejoras
+- El panel admin tiene datos de demostración para poder probarlo sin servidor
+
+---
+
+## 🔗 Archivos clave para recordar
+
+| Archivo | Propósito |
+|---------|-----------|
+| `frontend/index.html` | Página principal del spa |
+| `frontend/css/style.css` | Tema visual spa |
+| `frontend/js/main.js` | Lógica del sitio público |
+| `admin/login.html` | **Login del panel** |
+| `admin/dashboard.html` | **Dashboard principal** |
+| `admin/css/admin.css` | Estilos del panel |
+| `admin/js/admin.js` | Lógica del panel |
+| `backend/api/reservations.php` | API de reservas |
+| `backend/api/auth.php` | **API de autenticación** |
+| `backend/models/Reservation.php` | Modelo de datos |
+| `backend/middleware/Auth.php` | **Middleware de auth** |
+
+---
+
+**Creado por:** Claude Code
+**Guardar en:** `/c/Users/Carlos/Downloads/proyectos Web/massage-spa/AVANCES_PROYECTO.md`
+**Actualizar:** Cada vez que haya cambios significativos
