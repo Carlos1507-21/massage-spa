@@ -1,14 +1,14 @@
 
 <?php
 // ============================================
-// SERENITY SPA - Database Configuration
+// SANACIÓN CONSCIENTE - Database Configuration
 // ============================================
 
 // Configuración de la base de datos
 // En producción, usar variables de entorno
 
 define('DB_HOST', $_ENV['DB_HOST'] ?? 'localhost');
-define('DB_NAME', $_ENV['DB_NAME'] ?? 'serenity_spa');
+define('DB_NAME', $_ENV['DB_NAME'] ?? 'sanacion_consciente');
 define('DB_USER', $_ENV['DB_USER'] ?? 'root');
 define('DB_PASS', $_ENV['DB_PASS'] ?? '');
 define('DB_CHARSET', 'utf8mb4');
@@ -50,6 +50,28 @@ function initDatabase() {
             message TEXT,
             status ENUM('pending', 'confirmed', 'cancelled') DEFAULT 'pending',
             created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+        -- Migración: agregar columna calendar_event_id si no existe
+        SET @exist := (SELECT COUNT(*) FROM information_schema.columns
+            WHERE table_schema = DATABASE()
+            AND table_name = 'reservations'
+            AND column_name = 'calendar_event_id');
+        SET @sql := IF(@exist = 0,
+            'ALTER TABLE reservations ADD COLUMN calendar_event_id VARCHAR(255) NULL AFTER status',
+            'SELECT 1');
+        PREPARE stmt FROM @sql;
+        EXECUTE stmt;
+        DEALLOCATE PREPARE stmt;
+
+        CREATE TABLE IF NOT EXISTS google_calendar_tokens (
+            id INT PRIMARY KEY DEFAULT 1,
+            access_token TEXT NOT NULL,
+            refresh_token TEXT NOT NULL,
+            expires_at DATETIME NOT NULL,
+            scope TEXT,
+            token_type VARCHAR(20) DEFAULT 'Bearer',
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 

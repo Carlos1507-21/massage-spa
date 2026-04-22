@@ -1,13 +1,13 @@
 
 <?php
 // ============================================
-// SERENITY SPA - WhatsApp Integration
+// SANACIÓN CONSCIENTE - WhatsApp Integration
 // ============================================
 
 class WhatsApp {
     // Número de WhatsApp del spa (en producción, usar variable de entorno)
     private $businessNumber;
-    private $businessName = 'Serenity Spa';
+    private $businessName = 'Sanación Consciente';
 
     public function __construct() {
         // Número de WhatsApp del negocio (reemplazar con el real)
@@ -124,7 +124,7 @@ class WhatsApp {
     public function getShareMessage($reservationData) {
         $serviceName = $this->getServiceName($reservationData['service']);
 
-        $message = "🌿 *Reserva en Serenity Spa*\n\n";
+        $message = "🌿 *Reserva en Sanación Consciente*\n\n";
         $message .= "✨ Servicio: {$serviceName}\n";
         $message .= "📅 Fecha: {$reservationData['date']}\n";
         $message .= "⏰ Hora: {$reservationData['time']}\n";

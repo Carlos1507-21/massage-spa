@@ -1,6 +1,6 @@
 <?php
 // ============================================
-// SERENITY SPA - Authentication API
+// SANACIÓN CONSCIENTE - Authentication API
 // ============================================
 
 require_once __DIR__ . '/../middleware/Auth.php';

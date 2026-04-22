@@ -1,7 +1,7 @@
 
 <?php
 // ============================================
-// SERENITY SPA - Email Model
+// SANACIÓN CONSCIENTE - Email Model
 // ============================================
 
 require_once __DIR__ . '/../config/email.php';
@@ -22,7 +22,7 @@ class Email {
      */
     public function sendNewReservation($data) {
         $to = $data['email'];
-        $subject = '✨ Hemos recibido tu reserva - Serenity Spa';
+        $subject = '✨ Hemos recibido tu reserva - Sanación Consciente';
 
         $body = $this->getNewReservationTemplate($data);
 
@@ -34,7 +34,7 @@ class Email {
      */
     public function sendConfirmation($data) {
         $to = $data['email'];
-        $subject = '✅ Tu reserva ha sido confirmada - Serenity Spa';
+        $subject = '✅ Tu reserva ha sido confirmada - Sanación Consciente';
 
         $body = $this->getConfirmationTemplate($data);
 
@@ -46,7 +46,7 @@ class Email {
      */
     public function sendCancellation($data) {
         $to = $data['email'];
-        $subject = '❌ Tu reserva ha sido cancelada - Serenity Spa';
+        $subject = '❌ Tu reserva ha sido cancelada - Sanación Consciente';
 
         $body = $this->getCancellationTemplate($data);
 
@@ -58,7 +58,7 @@ class Email {
      */
     public function sendReminder($data) {
         $to = $data['email'];
-        $subject = '📅 Recordatorio: Tu cita es mañana - Serenity Spa';
+        $subject = '📅 Recordatorio: Tu cita es mañana - Sanación Consciente';
 
         $body = $this->getReminderTemplate($data);
 
@@ -69,8 +69,8 @@ class Email {
      * Notificar al admin de nueva reserva
      */
     public function notifyAdminNewReservation($data) {
-        $to = ADMIN_EMAIL ?? 'admin@serenityspa.cl';
-        $subject = '🔔 Nueva reserva recibida - Serenity Spa';
+        $to = ADMIN_EMAIL ?? 'admin@sanacionconsciente.cl';
+        $subject = '🔔 Nueva reserva recibida - Sanación Consciente';
 
         $body = "
         <html>
@@ -92,7 +92,7 @@ class Email {
                 </div>
 
                 <p style=\"text-align: center;\">
-                    <a href=\"https://serenityspa.cl/admin\" style=\"background: #2d5a4a; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px;\">
+                    <a href=\"https://sanacionconsciente.cl/admin\" style=\"background: #2d5a4a; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px;\">
                         Ver en el Panel de Admin
                     </a>
                 </p>
@@ -176,7 +176,7 @@ class Email {
         <body>
             <div class='container'>
                 <div class='header'>
-                    <h1>🌿 Serenity Spa</h1>
+                    <h1>🌿 Sanación Consciente</h1>
                     <p>¡Gracias por tu reserva!</p>
                 </div>
 
@@ -212,7 +212,7 @@ class Email {
                 <div class='footer'>
                     <p>📍 Av. Providencia 1234, Santiago<br>
                     📞 +56 9 1234 5678<br>
-                    ✉️ reservas@serenityspa.cl</p>
+                    ✉️ reservas@sanacionconsciente.cl</p>
 
                     <div class='social-links'>
                         <a href='#'>📸 Instagram</a> |
@@ -254,13 +254,13 @@ class Email {
         <body>
             <div class='container'>
                 <div class='header'>
-                    <h1>🌿 Serenity Spa</h1>
+                    <h1>🌿 Sanación Consciente</h1>
                     <div class='confirmation-badge'>✅ Reserva Confirmada</div>
                 </div>
 
                 <div class='content'>
                     <h2>¡Excelentes noticias {$data['name']}!</h2>
-                    <p>Tu reserva ha sido confirmada. Te esperamos en Serenity Spa para que disfrutes de una experiencia de relajación única.</p>
+                    <p>Tu reserva ha sido confirmada. Te esperamos en Sanación Consciente para que disfrutes de una experiencia de relajación única.</p>
 
                     <div class='detail-box'>
                         <h3>📋 Detalles confirmados:</h3>
@@ -324,7 +324,7 @@ class Email {
         <body>
             <div class='container'>
                 <div class='header'>
-                    <h1>🌿 Serenity Spa</h1>
+                    <h1>🌿 Sanación Consciente</h1>
                     <p>Reserva Cancelada</p>
                 </div>
 
@@ -367,13 +367,13 @@ class Email {
         <body>
             <div class='container'>
                 <div class='header'>
-                    <h1>🌿 Serenity Spa</h1>
+                    <h1>🌿 Sanación Consciente</h1>
                     <p>📅 Recordatorio de Cita</p>
                 </div>
 
                 <div class='content'>
                     <h2>Hola {$data['name']},</h2>
-                    <p>Te recordamos que mañana tienes tu cita en Serenity Spa.</p>
+                    <p>Te recordamos que mañana tienes tu cita en Sanación Consciente.</p>
 
                     <div class='reminder-box'>
                         <h3>Detalles:</h3>

@@ -1,7 +1,7 @@
-# 🌿 Serenity Spa - Registro de Avances del Proyecto
+# 🌿 Sanación Consciente - Registro de Avances del Proyecto
 
-**Fecha última actualización:** 2026-04-14
-**Estado:** Panel de administración COMPLETO agregado
+**Fecha última actualización:** 2026-04-21
+**Estado:** Integración con Google Calendar implementada (listo para conectar credenciales)
 **Próxima sesión:** Revisar panel admin o continuar con otras funcionalidades
 
 ---
@@ -176,11 +176,20 @@ massage-spa/
 ### Opción C: Con servidor local (completo)
 1. Instalar XAMPP/WAMP/MAMP
 2. Copiar proyecto a `htdocs/`
-3. Crear BD `serenity_spa` en MySQL
+3. Crear BD `sanacion_consciente` en MySQL
 4. Ejecutar `initDatabase()` para crear tablas
 5. Acceder a:
    - Sitio web: `http://localhost/massage-spa/frontend/`
    - Panel admin: `http://localhost/massage-spa/admin/login.html`
+
+### Opción D: Probar Google Calendar (requiere servidor)
+1. Seguir pasos de Opción C
+2. Ir a Google Cloud Console y crear credenciales OAuth 2.0
+3. Editar `backend/config/google-calendar.php` y pegar Client ID y Client Secret
+4. Asegurar que el URI de redirección esté configurado en Google Cloud Console
+5. Ir al panel admin → Integraciones → Conectar con Google
+6. Autorizar la aplicación con tu cuenta de Google
+7. Crear o confirmar una reserva: se sincronizará automáticamente con el calendario
 
 ---
 
@@ -210,6 +219,47 @@ massage-spa/
 - Protección por sesión (redirige a login si no está autenticado)
 - Datos de demostración cuando no hay conexión a BD
 
+### 5. Integración con Google Calendar (NUEVO - Abril 2026)
+
+**Backend (`backend/services/GoogleCalendarService.php`):**
+- Clase completa con OAuth 2.0 implementado con cURL (sin Composer)
+- Almacenamiento seguro de tokens en BD (`google_calendar_tokens`)
+- Auto-refresco de access_token usando refresh_token
+- Crear, actualizar y eliminar eventos en Google Calendar
+- Sincronización automática al confirmar/cancelar reservas
+
+**Configuración (`backend/config/google-calendar.php`):**
+- Placeholders claros para `GOOGLE_CLIENT_ID` y `GOOGLE_CLIENT_SECRET`
+- Instrucciones paso a paso para obtener credenciales en Google Cloud Console
+- URI de redirección calculada automáticamente
+- Scope: `calendar.events` (crear/editar eventos)
+
+**API (`backend/api/google-calendar.php`):**
+- Endpoints:
+  - `status` → verificar estado de conexión
+  - `auth-url` → generar URL de autorización OAuth
+  - `callback` → recibir token de Google
+  - `disconnect` → desconectar cuenta
+  - `sync` → sincronizar reserva específica
+  - `sync-all` → sincronizar todas las reservas pendientes
+
+**Panel de admin (`admin/dashboard.html` + `admin/js/admin.js`):**
+- Nueva sección "Integraciones" en sidebar
+- Tarjeta de Google Calendar con estado visual
+- Botón "Conectar con Google" (abre OAuth)
+- Botón "Desconectar"
+- Botón "Sincronizar todas las reservas"
+- Panel de instrucciones paso a paso cuando no está configurado
+- Estados visuales: Sin configurar / Configurado sin conectar / Conectado
+
+**Sincronización automática:**
+- Al crear una reserva → se intenta crear evento en Google Calendar
+- Al confirmar una reserva → evento pasa a verde en Google Calendar
+- Al cancelar una reserva → evento se elimina del calendario
+- Duración del evento según tipo de servicio (45-90 min)
+- Recordatorios automáticos: email 24h antes + popup 1h antes
+- Color del evento según estado: amarillo (pendiente), verde (confirmado), rojo (cancelado)
+
 ---
 
 ## 🎯 Para la próxima sesión
@@ -225,8 +275,8 @@ massage-spa/
 
 **B. Funcionalidad backend:**
 - [x] Panel de administración ✅ COMPLETADO
-- [ ] Enviar emails de confirmación
-- [ ] Integrar con calendario (Google Calendar API)
+- [x] Integrar con calendario (Google Calendar API) ✅ IMPLEMENTADO (pendiente credenciales)
+- [ ] Enviar emails de confirmación (ya implementado parcialmente)
 - [ ] Historial de reservas por cliente
 - [ ] Sistema de cupones/descuentos
 
@@ -252,7 +302,7 @@ massage-spa/
 
 ## 📝 Notas importantes
 
-- El usuario pidió spa de masajes → se creó "Serenity Spa"
+- El usuario pidió spa de masajes → se creó "Sanación Consciente"
 - El usuario pidió estructura con frontend/backend → se hizo separación clara
 - El usuario pidió panel de administración → se creó completo con login, dashboard y gestión de reservas
 - El formulario de reservas está funcional pero guarda en BD solo con servidor PHP
@@ -260,6 +310,7 @@ massage-spa/
 - El menú hamburguesa solo se ve en móvil (< 768px)
 - Hay comentarios TODO en el código marcando futuras mejoras
 - El panel admin tiene datos de demostración para poder probarlo sin servidor
+- **Google Calendar:** para activar, editar `backend/config/google-calendar.php` y reemplazar los placeholders con credenciales reales de Google Cloud Console
 
 ---
 
@@ -276,8 +327,11 @@ massage-spa/
 | `admin/js/admin.js` | Lógica del panel |
 | `backend/api/reservations.php` | API de reservas |
 | `backend/api/auth.php` | **API de autenticación** |
+| `backend/api/google-calendar.php` | **API de Google Calendar** |
 | `backend/models/Reservation.php` | Modelo de datos |
 | `backend/middleware/Auth.php` | **Middleware de auth** |
+| `backend/services/GoogleCalendarService.php` | **Servicio de Google Calendar** |
+| `backend/config/google-calendar.php` | **Configuración de Google Calendar** |
 
 ---
 

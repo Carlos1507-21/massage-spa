@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - Serenity Spa</title>
+    <title>Dashboard - Sanación Consciente</title>
     <link rel="stylesheet" href="css/admin.css">
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Open+Sans:wght@300;400;600&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -12,7 +12,7 @@
     <!-- Sidebar -->
     <aside class="sidebar">
         <div class="sidebar-header">
-            <h2>🌿 Serenity Spa</h2>
+            <h2>🌿 Sanación Consciente</h2>
             <p>Panel Admin</p>
         </div>
 
@@ -41,6 +41,13 @@
                     <a href="#reports" data-section="reports">
                         <i class="fas fa-chart-bar"></i>
                         <span>Reportes</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#integrations" data-section="integrations">
+                        <i class="fas fa-plug"></i>
+                        <span>Integraciones</span>
+                        <span class="badge" id="integrationBadge" style="display:none;">!</span>
                     </a>
                 </li>
             </ul>
@@ -223,6 +230,78 @@
                 <div class="coming-icon">📈</div>
                 <h2>En desarrollo</h2>
                 <p>Los reportes estarán disponibles próximamente</p>
+            </div>
+        </section>
+
+        <!-- Integrations Section -->
+        <section id="integrations-section" class="content-section">
+            <div class="section-header">
+                <h1>Integraciones</h1>
+                <p>Conecta Sanación Consciente con otros servicios</p>
+            </div>
+
+            <!-- Google Calendar Card -->
+            <div class="integration-card" id="googleCalendarCard">
+                <div class="integration-header">
+                    <div class="integration-icon" style="background: #4285F4; color: white;">
+                        <i class="fab fa-google"></i>
+                    </div>
+                    <div class="integration-info">
+                        <h3>Google Calendar</h3>
+                        <p class="integration-desc">Sincroniza automáticamente las reservas con el calendario de Google. Al confirmar una reserva, se creará un evento automáticamente.</p>
+                    </div>
+                    <div class="integration-status" id="calendarStatus">
+                        <span class="status-badge status-disconnected">Sin configurar</span>
+                    </div>
+                </div>
+
+                <div class="integration-body">
+                    <div class="integration-details" id="calendarDetails" style="display:none;">
+                        <div class="detail-row">
+                            <span class="detail-label">Estado:</span>
+                            <span class="detail-value" id="calendarDetailStatus">—</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Expira:</span>
+                            <span class="detail-value" id="calendarDetailExpires">—</span>
+                        </div>
+                        <div class="detail-row">
+                            <span class="detail-label">Calendario:</span>
+                            <span class="detail-value">primary</span>
+                        </div>
+                    </div>
+
+                    <div class="integration-actions">
+                        <button class="btn-connect" id="connectCalendarBtn" style="display:none;">
+                            <i class="fab fa-google"></i> Conectar con Google
+                        </button>
+                        <button class="btn-disconnect" id="disconnectCalendarBtn" style="display:none;">
+                            <i class="fas fa-unlink"></i> Desconectar
+                        </button>
+                        <button class="btn-secondary" id="syncAllBtn" style="display:none;">
+                            <i class="fas fa-sync-alt"></i> Sincronizar todas
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Instrucciones de configuración -->
+                <div class="integration-setup" id="calendarSetup" style="display:none; margin-top: 1.5rem; padding: 1rem; background: #f8f9fa; border-radius: 8px;">
+                    <h4><i class="fas fa-cog"></i> Pasos para configurar Google Calendar</h4>
+                    <ol style="margin: 0.75rem 0; padding-left: 1.25rem; line-height: 1.8;">
+                        <li>Ir a <a href="https://console.cloud.google.com/" target="_blank" rel="noopener">Google Cloud Console <i class="fas fa-external-link-alt" style="font-size: 0.7em;"></i></a></li>
+                        <li>Crear un proyecto nuevo (o seleccionar uno existente)</li>
+                        <li>Habilitar <strong>Google Calendar API</strong>: APIs &amp; Services &gt; Enable APIs and Services</li>
+                        <li>Crear credenciales OAuth 2.0: Credentials &gt; Create Credentials &gt; OAuth client ID</li>
+                        <li>Tipo: <strong>Web application</strong></li>
+                        <li>Agregar URI de redirección autorizado:
+                            <code id="redirectUriDisplay" style="display:block; margin-top:0.25rem; padding:0.5rem; background:#fff; border-radius:4px; word-break:break-all; font-size:0.85em; color:#555;">—</code>
+                        </li>
+                        <li>Copiar <strong>Client ID</strong> y <strong>Client Secret</strong></li>
+                        <li>Editar el archivo <code>backend/config/google-calendar.php</code> y pegar los valores</li>
+                        <li>Ir a <strong>OAuth consent screen</strong> y agregar tu email como usuario de prueba</li>
+                        <li>Volver aquí y hacer clic en "Conectar con Google"</li>
+                    </ol>
+                </div>
             </div>
         </section>
     </main>

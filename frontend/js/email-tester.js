@@ -1,6 +1,6 @@
 
 // ============================================
-// SERENITY SPA - Email Tester (LocalStorage)
+// SANACIÓN CONSCIENTE - Email Tester (LocalStorage)
 // Para probar sin servidor PHP
 // ============================================
 
@@ -9,7 +9,7 @@
 
 const EmailTester = {
     // Almacén de emails en localStorage
-    storageKey: 'serenity_spa_emails',
+    storageKey: 'sanacion_consciente_emails',
 
     // Plantillas de emails (copiadas del backend)
     templates: {
@@ -25,7 +25,7 @@ const EmailTester = {
 
             return {
                 to: data.email,
-                subject: '✨ Hemos recibido tu reserva - Serenity Spa',
+                subject: '✨ Hemos recibido tu reserva - Sanación Consciente',
                 html: `
                 <!DOCTYPE html>
                 <html>
@@ -46,7 +46,7 @@ const EmailTester = {
                 <body>
                     <div class="container">
                         <div class="header">
-                            <h1>🌿 Serenity Spa</h1>
+                            <h1>🌿 Sanación Consciente</h1>
                             <p>¡Gracias por tu reserva!</p>
                         </div>
                         <div class="content">
@@ -68,13 +68,13 @@ const EmailTester = {
                             </div>
 
                             <p style="text-align: center;">
-                                <a href="https://wa.me/56912345678?text=Hola%20Serenity%20Spa%2C%20soy%20${encodeURIComponent(data.name)}" class="cta-button">📱 Contactar por WhatsApp</a>
+                                <a href="https://wa.me/56912345678?text=Hola%20Sanaci%C3%B3n%20Consciente%2C%20soy%20${encodeURIComponent(data.name)}" class="cta-button">📱 Contactar por WhatsApp</a>
                             </p>
                         </div>
                         <div class="footer">
                             <p>📍 Av. Providencia 1234, Santiago<br>
                             📞 +56 9 1234 5678<br>
-                            ✉️ reservas@serenityspa.cl</p>
+                            ✉️ reservas@sanacionconsciente.cl</p>
                         </div>
                     </div>
                 </body>
@@ -96,7 +96,7 @@ const EmailTester = {
 
             return {
                 to: 'ccarrillo29@gmail.com (Admin)',
-                subject: '🔔 Nueva reserva recibida - Serenity Spa',
+                subject: '🔔 Nueva reserva recibida - Sanación Consciente',
                 html: `
                 <!DOCTYPE html>
                 <html>
@@ -149,7 +149,7 @@ const EmailTester = {
 
     // Agregar a bandeja de entrada del admin
     addToInbox: function(email) {
-        const inboxKey = 'serenity_spa_inbox';
+        const inboxKey = 'sanacion_consciente_inbox';
         const inbox = JSON.parse(localStorage.getItem(inboxKey) || '[]');
         inbox.unshift({
             id: email.id,
@@ -172,7 +172,7 @@ const EmailTester = {
 
     // Obtener bandeja de entrada
     getInbox: function() {
-        return JSON.parse(localStorage.getItem('serenity_spa_inbox') || '[]');
+        return JSON.parse(localStorage.getItem('sanacion_consciente_inbox') || '[]');
     },
 
     // Marcar como leído
@@ -181,21 +181,21 @@ const EmailTester = {
         const email = inbox.find(e => e.id === id);
         if (email) {
             email.read = true;
-            localStorage.setItem('serenity_spa_inbox', JSON.stringify(inbox));
+            localStorage.setItem('sanacion_consciente_inbox', JSON.stringify(inbox));
         }
     },
 
     // Limpiar todos los emails
     clearAll: function() {
         localStorage.removeItem(this.storageKey);
-        localStorage.removeItem('serenity_spa_inbox');
+        localStorage.removeItem('sanacion_consciente_inbox');
         console.log('🗑️ Todos los emails eliminados');
     },
 
     // Exportar como archivo
     exportToFile: function() {
         const emails = this.getEmails();
-        let content = 'SERENITY SPA - EMAIL LOG\n';
+        let content = 'SANACIÓN CONSCIENTE - EMAIL LOG\n';
         content += '========================\n\n';
 
         emails.forEach(email => {

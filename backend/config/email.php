@@ -1,6 +1,6 @@
 <?php
 // ============================================
-// SERENITY SPA - Email Configuration
+// SANACIÓN CONSCIENTE - Email Configuration
 // ============================================
 
 // Configuración SMTP (para producción)
@@ -12,7 +12,7 @@ define('SMTP_SECURE', $_ENV['SMTP_SECURE'] ?? 'tls');
 
 // Configuración del remitente
 define('EMAIL_FROM', 'ccarrillo29@gmail.com');
-define('EMAIL_NAME', 'Serenity Spa');
+define('EMAIL_NAME', 'Sanación Consciente');
 define('EMAIL_REPLY_TO', 'ccarrillo29@gmail.com');
 define('ADMIN_EMAIL', 'ccarrillo29@gmail.com'); // Email para notificaciones del admin
 
@@ -51,19 +51,19 @@ function logEmail($to, $subject, $body, $status = 'sent') {
 // Configuración de plantillas de email
 $emailTemplates = [
     'new_reservation' => [
-        'subject' => 'Confirmación de Reserva - Serenity Spa',
+        'subject' => 'Confirmación de Reserva - Sanación Consciente',
         'template' => 'emails/new_reservation.html'
     ],
     'reservation_confirmed' => [
-        'subject' => 'Tu reserva ha sido confirmada - Serenity Spa',
+        'subject' => 'Tu reserva ha sido confirmada - Sanación Consciente',
         'template' => 'emails/reservation_confirmed.html'
     ],
     'reservation_reminder' => [
-        'subject' => 'Recordatorio de tu cita - Serenity Spa',
+        'subject' => 'Recordatorio de tu cita - Sanación Consciente',
         'template' => 'emails/reservation_reminder.html'
     ],
     'cancellation' => [
-        'subject' => 'Reserva cancelada - Serenity Spa',
+        'subject' => 'Reserva cancelada - Sanación Consciente',
         'template' => 'emails/cancellation.html'
     ]
 ];

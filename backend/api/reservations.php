@@ -1,12 +1,13 @@
 
 <?php
 // ============================================
-// SERENITY SPA - Reservations API
+// SANACIÓN CONSCIENTE - Reservations API
 // ============================================
 
 require_once __DIR__ . '/../models/Reservation.php';
 require_once __DIR__ . '/../models/Email.php';
 require_once __DIR__ . '/../models/WhatsApp.php';
+require_once __DIR__ . '/../services/GoogleCalendarService.php';
 
 // Headers para CORS y JSON
 header('Content-Type: application/json');
@@ -93,6 +94,19 @@ switch ($method) {
 
             // Notificar al admin
             $email->notifyAdminNewReservation($data);
+
+            // Sincronizar con Google Calendar (si está configurado y conectado)
+            $createdReservation = $reservation->getById($id);
+            if ($createdReservation) {
+                $calendarService = new GoogleCalendarService();
+                $calendarResult = $calendarService->syncReservation($createdReservation);
+                $response['calendar_sync'] = $calendarResult['success'];
+                if (!$calendarResult['success']) {
+                    $response['calendar_message'] = $calendarResult['message'];
+                } else {
+                    $response['calendar_event_id'] = $calendarResult['event_id'] ?? null;
+                }
+            }
         } else {
             $response['message'] = 'Error al crear la reserva';
             http_response_code(500);
@@ -126,6 +140,9 @@ switch ($method) {
             $response['success'] = true;
             $response['message'] = 'Reserva actualizada';
 
+            // Refrescar datos de la reserva (ahora con nuevo status)
+            $updatedReservation = $reservation->getById($data['id']);
+
             // Enviar email según el nuevo estado
             if ($reservationData) {
                 $email = new Email();
@@ -134,6 +151,16 @@ switch ($method) {
                     $email->sendConfirmation($reservationData);
                 } elseif ($data['status'] === 'cancelled') {
                     $email->sendCancellation($reservationData);
+                }
+            }
+
+            // Sincronizar con Google Calendar automáticamente
+            if ($updatedReservation) {
+                $calendarService = new GoogleCalendarService();
+                $calendarResult = $calendarService->syncReservation($updatedReservation);
+                $response['calendar_sync'] = $calendarResult['success'];
+                if (!$calendarResult['success']) {
+                    $response['calendar_message'] = $calendarResult['message'];
                 }
             }
         } else {

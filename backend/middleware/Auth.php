@@ -1,6 +1,6 @@
 <?php
 // ============================================
-// SERENITY SPA - Authentication Middleware
+// SANACIÓN CONSCIENTE - Authentication Middleware
 // ============================================
 
 session_start();

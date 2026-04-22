@@ -1,6 +1,6 @@
 
 // ============================================
-// SERENITY SPA - Admin Panel JavaScript
+// SANACIÓN CONSCIENTE - Admin Panel JavaScript
 // ============================================
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -14,6 +14,7 @@ document.addEventListener('DOMContentLoaded', function() {
     initModal();
     initLogout();
     initSearch();
+    initIntegrations();
 });
 
 // Check authentication
@@ -603,6 +604,156 @@ function loadDemoReservations() {
             showNotification('Reserva cancelada (demo)', 'success');
         });
     });
+}
+
+// ============================================
+// INTEGRACIONES
+// ============================================
+
+function initIntegrations() {
+    loadCalendarStatus();
+
+    const connectBtn = document.getElementById('connectCalendarBtn');
+    const disconnectBtn = document.getElementById('disconnectCalendarBtn');
+    const syncAllBtn = document.getElementById('syncAllBtn');
+
+    if (connectBtn) {
+        connectBtn.addEventListener('click', async () => {
+            try {
+                const response = await fetch('../backend/api/google-calendar.php?action=auth-url', {
+                    method: 'POST',
+                    credentials: 'include'
+                });
+                const data = await response.json();
+
+                if (data.success && data.auth_url) {
+                    window.location.href = data.auth_url;
+                } else {
+                    showNotification(data.message || 'Error obteniendo URL de autorización', 'error');
+                }
+            } catch (error) {
+                console.error('Error getting auth URL:', error);
+                showNotification('Error de conexión con el servidor', 'error');
+            }
+        });
+    }
+
+    if (disconnectBtn) {
+        disconnectBtn.addEventListener('click', async () => {
+            if (!confirm('¿Estás seguro de desconectar Google Calendar? Las reservas existentes no se eliminarán del calendario.')) {
+                return;
+            }
+
+            try {
+                const response = await fetch('../backend/api/google-calendar.php?action=disconnect', {
+                    method: 'POST',
+                    credentials: 'include'
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    showNotification('Google Calendar desconectado', 'success');
+                    loadCalendarStatus();
+                } else {
+                    showNotification(data.message || 'Error al desconectar', 'error');
+                }
+            } catch (error) {
+                console.error('Error disconnecting:', error);
+                showNotification('Error de conexión', 'error');
+            }
+        });
+    }
+
+    if (syncAllBtn) {
+        syncAllBtn.addEventListener('click', async () => {
+            syncAllBtn.disabled = true;
+            syncAllBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sincronizando...';
+
+            try {
+                const response = await fetch('../backend/api/google-calendar.php?action=sync-all', {
+                    method: 'POST',
+                    credentials: 'include'
+                });
+                const data = await response.json();
+
+                if (data.success) {
+                    showNotification(`${data.synced} reservas sincronizadas`, 'success');
+                    if (data.errors && data.errors.length > 0) {
+                        console.warn('Errores de sincronización:', data.errors);
+                    }
+                } else {
+                    showNotification(data.message || 'Error al sincronizar', 'error');
+                }
+            } catch (error) {
+                console.error('Error syncing all:', error);
+                showNotification('Error de conexión', 'error');
+            } finally {
+                syncAllBtn.disabled = false;
+                syncAllBtn.innerHTML = '<i class="fas fa-sync-alt"></i> Sincronizar todas';
+            }
+        });
+    }
+}
+
+async function loadCalendarStatus() {
+    const statusEl = document.getElementById('calendarStatus');
+    const detailsEl = document.getElementById('calendarDetails');
+    const setupEl = document.getElementById('calendarSetup');
+    const connectBtn = document.getElementById('connectCalendarBtn');
+    const disconnectBtn = document.getElementById('disconnectCalendarBtn');
+    const syncAllBtn = document.getElementById('syncAllBtn');
+    const badge = document.getElementById('integrationBadge');
+    const redirectUriEl = document.getElementById('redirectUriDisplay');
+
+    if (!statusEl) return;
+
+    try {
+        const response = await fetch('../backend/api/google-calendar.php?action=status', {
+            credentials: 'include'
+        });
+        const data = await response.json();
+
+        // Mostrar URI de redirección
+        if (redirectUriEl && data.auth_url) {
+            const url = new URL(data.auth_url);
+            redirectUriEl.textContent = url.searchParams.get('redirect_uri') || '—';
+        }
+
+        if (data.connected) {
+            statusEl.innerHTML = '<span class="status-badge status-confirmed">Conectado</span>';
+            detailsEl.style.display = 'block';
+            setupEl.style.display = 'none';
+            connectBtn.style.display = 'none';
+            disconnectBtn.style.display = 'inline-flex';
+            syncAllBtn.style.display = 'inline-flex';
+            badge.style.display = 'none';
+
+            document.getElementById('calendarDetailStatus').textContent = 'Activo';
+            document.getElementById('calendarDetailExpires').textContent = data.expires_at
+                ? new Date(data.expires_at).toLocaleString('es-CL')
+                : '—';
+        } else if (data.configured) {
+            statusEl.innerHTML = '<span class="status-badge status-pending">Configurado, sin conectar</span>';
+            detailsEl.style.display = 'none';
+            setupEl.style.display = 'none';
+            connectBtn.style.display = 'inline-flex';
+            disconnectBtn.style.display = 'none';
+            syncAllBtn.style.display = 'none';
+            badge.style.display = 'inline-block';
+        } else {
+            statusEl.innerHTML = '<span class="status-badge status-disconnected">Sin configurar</span>';
+            detailsEl.style.display = 'none';
+            setupEl.style.display = 'block';
+            connectBtn.style.display = 'none';
+            disconnectBtn.style.display = 'none';
+            syncAllBtn.style.display = 'none';
+            badge.style.display = 'inline-block';
+        }
+    } catch (error) {
+        console.error('Error loading calendar status:', error);
+        statusEl.innerHTML = '<span class="status-badge status-disconnected">Error de conexión</span>';
+        setupEl.style.display = 'block';
+    }
 }
 
 function createModalContent(r) {

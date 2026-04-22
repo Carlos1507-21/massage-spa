@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bandeja de Entrada - Emails Serenity Spa</title>
+    <title>Bandeja de Entrada - Emails Sanación Consciente</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
@@ -196,7 +196,7 @@
     <div class="container">
         <div class="header">
             <h1>📧 Bandeja de Entrada</h1>
-            <p>Emails enviados por Serenity Spa (modo demo)</p>
+            <p>Emails enviados por Sanación Consciente (modo demo)</p>
         </div>
 
         <div class="stats" id="stats">
@@ -239,8 +239,8 @@
         document.addEventListener('DOMContentLoaded', loadEmails);
 
         function loadEmails() {
-            const inbox = JSON.parse(localStorage.getItem('serenity_spa_inbox') || '[]');
-            const emails = JSON.parse(localStorage.getItem('serenity_spa_emails') || '[]');
+            const inbox = JSON.parse(localStorage.getItem('sanacion_consciente_inbox') || '[]');
+            const emails = JSON.parse(localStorage.getItem('sanacion_consciente_emails') || '[]');
 
             updateStats(inbox);
             renderEmailList(inbox);
@@ -292,14 +292,14 @@
         }
 
         function viewEmail(id) {
-            const inbox = JSON.parse(localStorage.getItem('serenity_spa_inbox') || '[]');
+            const inbox = JSON.parse(localStorage.getItem('sanacion_consciente_inbox') || '[]');
             const email = inbox.find(e => e.id === id);
 
             if (!email) return;
 
             // Marcar como leído
             email.read = true;
-            localStorage.setItem('serenity_spa_inbox', JSON.stringify(inbox));
+            localStorage.setItem('sanacion_consciente_inbox', JSON.stringify(inbox));
 
             // Mostrar detalle
             document.getElementById('emailList').style.display = 'none';
@@ -311,7 +311,7 @@
                 <div class="email-detail-header">
                     <div class="email-detail-row">
                         <div class="email-detail-label">De:</div>
-                        <div class="email-detail-value">Serenity Spa <reservas@serenityspa.cl></div>
+                        <div class="email-detail-value">Sanación Consciente <reservas@sanacionconsciente.cl></div>
                     </div>
                     <div class="email-detail-row">
                         <div class="email-detail-label">Para:</div>
@@ -352,14 +352,14 @@
         }
 
         function exportEmails() {
-            const emails = JSON.parse(localStorage.getItem('serenity_spa_emails') || '[]');
+            const emails = JSON.parse(localStorage.getItem('sanacion_consciente_emails') || '[]');
 
             if (emails.length === 0) {
                 alert('No hay emails para exportar');
                 return;
             }
 
-            let content = 'SERENITY SPA - EMAIL LOG\n';
+            let content = 'SANACIÓN CONSCIENTE - EMAIL LOG\n';
             content += '========================\n\n';
 
             emails.forEach(email => {
@@ -382,9 +382,9 @@
 
         function clearAllEmails() {
             if (confirm('¿Seguro que quieres eliminar TODOS los emails?')) {
-                localStorage.removeItem('serenity_spa_emails');
-                localStorage.removeItem('serenity_spa_inbox');
-                localStorage.removeItem('serenity_spa_reservations');
+                localStorage.removeItem('sanacion_consciente_emails');
+                localStorage.removeItem('sanacion_consciente_inbox');
+                localStorage.removeItem('sanacion_consciente_reservations');
                 loadEmails();
                 alert('🗑️ Todos los emails han sido eliminados');
             }

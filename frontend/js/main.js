@@ -1,6 +1,6 @@
 
 // ============================================
-// SERENITY SPA - Main JavaScript
+// SANACIÓN CONSCIENTE - Main JavaScript
 // ============================================
 
 document.addEventListener('DOMContentLoaded', function() {
@@ -227,18 +227,18 @@ document.head.appendChild(style);
 
 // Guardar reserva en localStorage
 function saveReservation(data) {
-    const reservations = JSON.parse(localStorage.getItem('serenity_spa_reservations') || '[]');
+    const reservations = JSON.parse(localStorage.getItem('sanacion_consciente_reservations') || '[]');
     reservations.push({
         id: Date.now(),
         ...data,
         status: 'pending',
         createdAt: new Date().toISOString()
     });
-    localStorage.setItem('serenity_spa_reservations', JSON.stringify(reservations));
+    localStorage.setItem('sanacion_consciente_reservations', JSON.stringify(reservations));
 }
 
 // Exportar para uso global
 window.saveReservation = saveReservation;
 
-console.log('🌿 Serenity Spa - Bienvenido a tu oasis de tranquilidad');
+console.log('🌿 Sanación Consciente - Bienvenido a tu oasis de tranquilidad');
 console.log('💡 Tip: Usa EmailTester.getInbox() en la consola para ver emails enviados');

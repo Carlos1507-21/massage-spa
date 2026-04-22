@@ -1,5 +1,5 @@
 
-# 🌿 Serenity Spa - Sistema de Reservas
+# 🌿 Sanación Consciente - Sistema de Reservas
 
 Sistema web completo para la gestión de reservas de un spa de masajes terapéuticos.
 
@@ -43,12 +43,12 @@ massage-spa/
 
 1. **Clonar el repositorio**
    ```bash
-   git clone https://github.com/tuusuario/serenity-spa.git
+   git clone https://github.com/tuusuario/sanacion-consciente.git
    cd massage-spa
    ```
 
 2. **Configurar la base de datos**
-   - Crear base de datos: `serenity_spa`
+   - Crear base de datos: `sanacion_consciente`
    - Importar esquema desde `backend/config/database.php`
 
 3. **Configurar variables de entorno**

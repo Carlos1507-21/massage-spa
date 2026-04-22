@@ -1,7 +1,7 @@
 
 <?php
 // ============================================
-// SERENITY SPA - Reservation Model
+// SANACIÓN CONSCIENTE - Reservation Model
 // ============================================
 
 require_once __DIR__ . '/../config/database.php';
@@ -73,6 +73,26 @@ class Reservation {
         } catch (PDOException $e) {
             error_log("Error obteniendo reserva: " . $e->getMessage());
             return false;
+        }
+    }
+
+    // Obtener reservas pendientes de sincronización con Google Calendar
+    public function getPendingCalendarSync($limit = 10) {
+        $sql = "SELECT * FROM reservations
+                WHERE calendar_event_id IS NULL
+                AND status IN ('pending', 'confirmed')
+                AND reservation_date >= CURDATE()
+                ORDER BY reservation_date ASC, reservation_time ASC
+                LIMIT :limit";
+
+        try {
+            $stmt = $this->pdo->prepare($sql);
+            $stmt->bindValue(':limit', (int)$limit, PDO::PARAM_INT);
+            $stmt->execute();
+            return $stmt->fetchAll();
+        } catch (PDOException $e) {
+            error_log("Error obteniendo reservas pendientes de sync: " . $e->getMessage());
+            return [];
         }
     }
 
