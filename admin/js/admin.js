@@ -15,6 +15,7 @@ document.addEventListener('DOMContentLoaded', function() {
     initLogout();
     initSearch();
     initIntegrations();
+    initBusinessHours();
 });
 
 // Check authentication
@@ -796,4 +797,375 @@ function createModalContent(r) {
             </div>
         </div>
     `;
+}
+
+// ============================================
+// BUSINESS HOURS MANAGEMENT
+// ============================================
+
+let businessHoursData = [];
+let specialDaysData = [];
+const dayNames = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+
+function initBusinessHours() {
+    const saveBtn = document.getElementById('saveAllHoursBtn');
+    if (saveBtn) {
+        saveBtn.addEventListener('click', saveAllHours);
+    }
+
+    const addSpecialDayBtn = document.getElementById('addSpecialDayBtn');
+    if (addSpecialDayBtn) {
+        addSpecialDayBtn.addEventListener('click', () => openSpecialDayModal());
+    }
+
+    const specialDayModalCancel = document.getElementById('specialDayModalCancel');
+    if (specialDayModalCancel) {
+        specialDayModalCancel.addEventListener('click', closeSpecialDayModal);
+    }
+
+    const specialDayModalSave = document.getElementById('specialDayModalSave');
+    if (specialDayModalSave) {
+        specialDayModalSave.addEventListener('click', saveSpecialDay);
+    }
+
+    const specialDayIsOpen = document.getElementById('specialDayIsOpen');
+    if (specialDayIsOpen) {
+        specialDayIsOpen.addEventListener('change', toggleSpecialDayHours);
+    }
+
+    // Modal close buttons
+    const modalCloses = document.querySelectorAll('#specialDayModal .modal-close');
+    modalCloses.forEach(btn => {
+        btn.addEventListener('click', closeSpecialDayModal);
+    });
+
+    // Load hours data
+    loadBusinessHours();
+}
+
+async function loadBusinessHours() {
+    try {
+        const response = await fetch('../backend/api/business-hours.php');
+        const data = await response.json();
+
+        if (data.success) {
+            businessHoursData = data.businessHours || [];
+            renderWeeklyHours();
+        }
+
+        // Load special days
+        const specialResponse = await fetch('../backend/api/business-hours.php?special_days=1');
+        const specialData = await specialResponse.json();
+
+        if (specialData.success) {
+            specialDaysData = specialData.specialDays || [];
+            renderSpecialDaysTable();
+        }
+    } catch (error) {
+        console.error('Error loading business hours:', error);
+        // Demo data for development
+        businessHoursData = getDemoBusinessHours();
+        specialDaysData = [];
+        renderWeeklyHours();
+        renderSpecialDaysTable();
+    }
+}
+
+function getDemoBusinessHours() {
+    return [
+        { day_of_week: 0, day_name: 'Domingo', is_open: false, open_time: null, close_time: null, break_start: null, break_end: null, slot_duration: 60, max_bookings_per_slot: 1, is_active: true },
+        { day_of_week: 1, day_name: 'Lunes', is_open: true, open_time: '09:00:00', close_time: '19:00:00', break_start: '14:00:00', break_end: '15:00:00', slot_duration: 60, max_bookings_per_slot: 1, is_active: true },
+        { day_of_week: 2, day_name: 'Martes', is_open: true, open_time: '09:00:00', close_time: '19:00:00', break_start: '14:00:00', break_end: '15:00:00', slot_duration: 60, max_bookings_per_slot: 1, is_active: true },
+        { day_of_week: 3, day_name: 'Miércoles', is_open: true, open_time: '09:00:00', close_time: '19:00:00', break_start: '14:00:00', break_end: '15:00:00', slot_duration: 60, max_bookings_per_slot: 1, is_active: true },
+        { day_of_week: 4, day_name: 'Jueves', is_open: true, open_time: '09:00:00', close_time: '19:00:00', break_start: '14:00:00', break_end: '15:00:00', slot_duration: 60, max_bookings_per_slot: 1, is_active: true },
+        { day_of_week: 5, day_name: 'Viernes', is_open: true, open_time: '09:00:00', close_time: '19:00:00', break_start: '14:00:00', break_end: '15:00:00', slot_duration: 60, max_bookings_per_slot: 1, is_active: true },
+        { day_of_week: 6, day_name: 'Sábado', is_open: true, open_time: '10:00:00', close_time: '16:00:00', break_start: null, break_end: null, slot_duration: 60, max_bookings_per_slot: 1, is_active: true }
+    ];
+}
+
+function renderWeeklyHours() {
+    const container = document.getElementById('weeklyHoursContainer');
+    if (!container) return;
+
+    container.innerHTML = businessHoursData.map(day => `
+        <div class="hour-card ${!day.is_open ? 'closed' : ''}" data-day="${day.day_of_week}">
+            <div class="hour-card-header">
+                <h4>${day.day_name}</h4>
+                <span class="${day.is_open ? 'open-badge' : 'closed-badge'}">
+                    ${day.is_open ? 'Abierto' : 'Cerrado'}
+                </span>
+            </div>
+            <div class="hour-card-body">
+                <div class="checkbox-wrapper">
+                    <input type="checkbox" id="isOpen_${day.day_of_week}"
+                        ${day.is_open ? 'checked' : ''}
+                        onchange="toggleDayHours(${day.day_of_week})">
+                    <span>Día de atención</span>
+                </div>
+                <div id="hours_${day.day_of_week}" style="${day.is_open ? '' : 'display: none;'}">
+                    <div class="hour-row">
+                        <label>Apertura:</label>
+                        <input type="time" id="openTime_${day.day_of_week}"
+                            value="${day.open_time ? day.open_time.substring(0, 5) : '09:00'}"
+                            ${!day.is_open ? 'disabled' : ''}>
+                    </div>
+                    <div class="hour-row">
+                        <label>Cierre:</label>
+                        <input type="time" id="closeTime_${day.day_of_week}"
+                            value="${day.close_time ? day.close_time.substring(0, 5) : '19:00'}"
+                            ${!day.is_open ? 'disabled' : ''}>
+                    </div>
+                    <div class="break-times">
+                        <div class="break-times-label">🕐 Hora de descanso</div>
+                        <div class="hour-row">
+                            <label>Inicio:</label>
+                            <input type="time" id="breakStart_${day.day_of_week}"
+                                value="${day.break_start ? day.break_start.substring(0, 5) : '14:00'}"
+                                ${!day.is_open ? 'disabled' : ''}>
+                        </div>
+                        <div class="hour-row">
+                            <label>Fin:</label>
+                            <input type="time" id="breakEnd_${day.day_of_week}"
+                                value="${day.break_end ? day.break_end.substring(0, 5) : '15:00'}"
+                                ${!day.is_open ? 'disabled' : ''}>
+                        </div>
+                    </div>
+                    <div class="hour-row" style="margin-top: 0.75rem;">
+                        <label>Duración slot:</label>
+                        <input type="number" id="slotDuration_${day.day_of_week}"
+                            value="${day.slot_duration || 60}" min="15" max="180" step="15"
+                            ${!day.is_open ? 'disabled' : ''} style="width: 70px;">
+                        <span style="font-size: 0.8rem; color: #888;">min</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `).join('');
+}
+
+function toggleDayHours(dayOfWeek) {
+    const isOpen = document.getElementById(`isOpen_${dayOfWeek}`).checked;
+    const hoursDiv = document.getElementById(`hours_${dayOfWeek}`);
+    const inputs = hoursDiv.querySelectorAll('input');
+
+    if (isOpen) {
+        hoursDiv.style.display = 'block';
+        inputs.forEach(input => input.disabled = false);
+    } else {
+        hoursDiv.style.display = 'none';
+        inputs.forEach(input => input.disabled = true);
+    }
+}
+
+async function saveAllHours() {
+    const saveBtn = document.getElementById('saveAllHoursBtn');
+    const originalText = saveBtn.innerHTML;
+    saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
+    saveBtn.disabled = true;
+
+    try {
+        let allSuccess = true;
+
+        for (let i = 0; i < 7; i++) {
+            const isOpen = document.getElementById(`isOpen_${i}`).checked;
+            const data = {
+                action: 'update_hours',
+                dayOfWeek: i,
+                is_open: isOpen,
+                open_time: isOpen ? document.getElementById(`openTime_${i}`).value + ':00' : null,
+                close_time: isOpen ? document.getElementById(`closeTime_${i}`).value + ':00' : null,
+                break_start: isOpen ? document.getElementById(`breakStart_${i}`).value + ':00' : null,
+                break_end: isOpen ? document.getElementById(`breakEnd_${i}`).value + ':00' : null,
+                slot_duration: parseInt(document.getElementById(`slotDuration_${i}`).value) || 60,
+                max_bookings_per_slot: 1,
+                is_active: true
+            };
+
+            const response = await fetch('../backend/api/business-hours.php', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+
+            const result = await response.json();
+            if (!result.success) {
+                allSuccess = false;
+            }
+        }
+
+        if (allSuccess) {
+            showNotification('Horarios guardados exitosamente', 'success');
+            loadBusinessHours();
+        } else {
+            showNotification('Error al guardar algunos horarios', 'error');
+        }
+    } catch (error) {
+        console.error('Error saving hours:', error);
+        showNotification('Error de conexión. Verifica que el servidor esté corriendo.', 'error');
+    } finally {
+        saveBtn.innerHTML = originalText;
+        saveBtn.disabled = false;
+    }
+}
+
+function renderSpecialDaysTable() {
+    const tbody = document.getElementById('specialDaysTableBody');
+    const noData = document.getElementById('noSpecialDays');
+
+    if (!tbody) return;
+
+    if (!specialDaysData || specialDaysData.length === 0) {
+        tbody.innerHTML = '';
+        noData.style.display = 'block';
+        return;
+    }
+
+    noData.style.display = 'none';
+    tbody.innerHTML = specialDaysData.map(day => {
+        const dateObj = new Date(day.date + 'T00:00:00');
+        const dateFormatted = dateObj.toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' });
+        const timeRange = day.is_open && day.open_time && day.close_time
+            ? `${day.open_time.substring(0, 5)} - ${day.close_time.substring(0, 5)}`
+            : '—';
+
+        return `
+            <tr>
+                <td>${dateFormatted}</td>
+                <td>${day.name}</td>
+                <td>
+                    <span class="${day.is_open ? 'special-day-open' : 'special-day-closed'}">
+                        ${day.is_open ? 'Abierto' : 'Cerrado'}
+                    </span>
+                </td>
+                <td>${timeRange}</td>
+                <td class="special-day-actions">
+                    <button class="btn-icon btn-icon-edit" onclick="editSpecialDay(${day.id})">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="btn-icon btn-icon-delete" onclick="deleteSpecialDay(${day.id})">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </td>
+            </tr>
+        `;
+    }).join('');
+}
+
+function openSpecialDayModal(day = null) {
+    const modal = document.getElementById('specialDayModal');
+    const title = document.getElementById('specialDayModalTitle');
+    const form = document.getElementById('specialDayForm');
+
+    if (day) {
+        title.textContent = 'Editar Día Festivo';
+        document.getElementById('specialDayId').value = day.id || '';
+        document.getElementById('specialDayDate').value = day.date || '';
+        document.getElementById('specialDayName').value = day.name || '';
+        document.getElementById('specialDayIsOpen').checked = day.is_open || false;
+        document.getElementById('specialDayOpenTime').value = day.open_time ? day.open_time.substring(0, 5) : '09:00';
+        document.getElementById('specialDayCloseTime').value = day.close_time ? day.close_time.substring(0, 5) : '19:00';
+        document.getElementById('specialDayBreakStart').value = day.break_start ? day.break_start.substring(0, 5) : '14:00';
+        document.getElementById('specialDayBreakEnd').value = day.break_end ? day.break_end.substring(0, 5) : '15:00';
+        document.getElementById('specialDayNotes').value = day.notes || '';
+    } else {
+        title.textContent = 'Agregar Día Festivo';
+        form.reset();
+        document.getElementById('specialDayId').value = '';
+        document.getElementById('specialDayDate').value = '';
+        document.getElementById('specialDayIsOpen').checked = false;
+    }
+
+    toggleSpecialDayHours();
+    modal.style.display = 'block';
+}
+
+function closeSpecialDayModal() {
+    const modal = document.getElementById('specialDayModal');
+    modal.style.display = 'none';
+}
+
+function toggleSpecialDayHours() {
+    const isOpen = document.getElementById('specialDayIsOpen').checked;
+    const container = document.getElementById('specialDayHoursContainer');
+    container.style.display = isOpen ? 'block' : 'none';
+}
+
+async function saveSpecialDay() {
+    const id = document.getElementById('specialDayId').value;
+    const isOpen = document.getElementById('specialDayIsOpen').checked;
+
+    const data = {
+        action: id ? 'update_special_day' : 'save_special_day',
+        id: id ? parseInt(id) : null,
+        date: document.getElementById('specialDayDate').value,
+        name: document.getElementById('specialDayName').value,
+        is_open: isOpen,
+        open_time: isOpen ? document.getElementById('specialDayOpenTime').value + ':00' : null,
+        close_time: isOpen ? document.getElementById('specialDayCloseTime').value + ':00' : null,
+        break_start: isOpen ? document.getElementById('specialDayBreakStart').value + ':00' : null,
+        break_end: isOpen ? document.getElementById('specialDayBreakEnd').value + ':00' : null,
+        notes: document.getElementById('specialDayNotes').value,
+        is_active: true
+    };
+
+    if (!data.date || !data.name) {
+        showNotification('Fecha y nombre son requeridos', 'error');
+        return;
+    }
+
+    try {
+        const response = await fetch('../backend/api/business-hours.php', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(data)
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            showNotification(id ? 'Día festivo actualizado' : 'Día festivo agregado', 'success');
+            closeSpecialDayModal();
+            loadBusinessHours();
+        } else {
+            showNotification(result.message || 'Error al guardar', 'error');
+        }
+    } catch (error) {
+        console.error('Error saving special day:', error);
+        showNotification('Error de conexión', 'error');
+    }
+}
+
+// Hacer funciones globales para los handlers onclick del HTML
+window.editSpecialDay = editSpecialDay;
+window.deleteSpecialDay = deleteSpecialDay;
+
+function editSpecialDay(id) {
+    const day = specialDaysData.find(d => d.id === id);
+    if (day) {
+        openSpecialDayModal(day);
+    }
+}
+
+async function deleteSpecialDay(id) {
+    if (!confirm('¿Estás seguro de eliminar este día festivo?')) return;
+
+    try {
+        const response = await fetch('../backend/api/business-hours.php', {
+            method: 'DELETE',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ action: 'delete_special_day', id })
+        });
+
+        const result = await response.json();
+
+        if (result.success) {
+            showNotification('Día festivo eliminado', 'success');
+            loadBusinessHours();
+        } else {
+            showNotification(result.message || 'Error al eliminar', 'error');
+        }
+    } catch (error) {
+        console.error('Error deleting special day:', error);
+        showNotification('Error de conexión', 'error');
+    }
 }

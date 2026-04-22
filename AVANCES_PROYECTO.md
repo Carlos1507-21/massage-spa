@@ -1,7 +1,7 @@
 # 🌿 Sanación Consciente - Registro de Avances del Proyecto
 
-**Fecha última actualización:** 2026-04-21
-**Estado:** Integración con Google Calendar implementada (listo para conectar credenciales)
+**Fecha última actualización:** 2026-04-22
+**Estado:** Módulo de Horarios de Atención completo (semanal + días festivos)
 **Próxima sesión:** Revisar panel admin o continuar con otras funcionalidades
 
 ---
@@ -260,6 +260,49 @@ massage-spa/
 - Recordatorios automáticos: email 24h antes + popup 1h antes
 - Color del evento según estado: amarillo (pendiente), verde (confirmado), rojo (cancelado)
 
+### 6. Módulo de Horarios de Atención (NUEVO - Abril 2026)
+
+**Backend (`backend/models/BusinessHours.php`):**
+- Modelo completo para gestión de horarios
+- Métodos: `getAll()`, `getByDay()`, `isOpenAt()`, `getAvailableSlots()`, `update()`
+- Soporte para días festivos y horarios especiales
+- Verificación de disponibilidad de slots
+
+**API (`backend/api/business-hours.php`):**
+- Endpoints REST para CRUD de horarios:
+  - GET - Listar horarios semanales / Verificar disponibilidad / Obtener slots
+  - PUT - Actualizar horario semanal
+  - POST - Guardar día festivo
+  - DELETE - Eliminar día festivo
+- Autenticación requerida para operaciones de escritura
+
+**Base de datos (`backend/config/database.php`):**
+- Tabla `business_hours`: Horarios semanales (Lunes a Domingo)
+  - Campos: day_of_week, is_open, open_time, close_time, break_start, break_end, slot_duration, max_bookings_per_slot
+- Tabla `special_days`: Días festivos / horarios especiales
+  - Campos: date, name, is_open, open_time, close_time, break_start, break_end, notes
+- Datos por defecto: Lunes a Viernes 9:00-19:00 (descanso 14:00-15:00), Sábado 10:00-16:00, Domingo cerrado
+
+**Panel Admin (`admin/dashboard.html` + `admin/js/admin.js` + `admin/css/admin.css`):**
+- Nueva sección "Horarios" en sidebar
+- Tarjetas editables para cada día de la semana
+- Toggle "Día de atención" para cerrar días específicos
+- Configuración de:
+  - Hora de apertura y cierre
+  - Hora de descanso (inicio y fin)
+  - Duración de slots (15-180 minutos)
+- Gestión de días festivos:
+  - Tabla con lista de días festivos
+  - Modal para agregar/editar
+  - Opción de cerrar el spa o abrir con horario especial
+  - Notas adicionales por día
+
+**Características:**
+- Validación de horarios coherentes
+- Soporte para múltiples reservas por slot (configurable)
+- Integración futura con formulario de reservas (validar disponibilidad)
+- Integración futura con Google Calendar (respetar horarios)
+
 ---
 
 ## 🎯 Para la próxima sesión
@@ -284,7 +327,7 @@ massage-spa/
 - [ ] Completar sección "Servicios" (CRUD servicios)
 - [ ] Completar sección "Reportes" (gráficos, exportar Excel/PDF)
 - [ ] Gestión de terapeutas/empleados
-- [ ] Configuración de horarios de atención
+- [x] Configuración de horarios de atención ✅ COMPLETADO
 - [ ] Backup/exportar base de datos
 
 **D. Técnicos:**
@@ -328,9 +371,12 @@ massage-spa/
 | `backend/api/reservations.php` | API de reservas |
 | `backend/api/auth.php` | **API de autenticación** |
 | `backend/api/google-calendar.php` | **API de Google Calendar** |
+| `backend/api/business-hours.php` | **API de Horarios de Atención** |
 | `backend/models/Reservation.php` | Modelo de datos |
+| `backend/models/BusinessHours.php` | **Modelo de Horarios** |
 | `backend/middleware/Auth.php` | **Middleware de auth** |
 | `backend/services/GoogleCalendarService.php` | **Servicio de Google Calendar** |
+| `backend/config/database.php` | **Configuración de BD (tablas horarios)** |
 | `backend/config/google-calendar.php` | **Configuración de Google Calendar** |
 
 ---

@@ -50,6 +50,12 @@
                         <span class="badge" id="integrationBadge" style="display:none;">!</span>
                     </a>
                 </li>
+                <li>
+                    <a href="#hours" data-section="hours">
+                        <i class="fas fa-clock"></i>
+                        <span>Horarios</span>
+                    </a>
+                </li>
             </ul>
         </nav>
 
@@ -304,10 +310,142 @@
                 </div>
             </div>
         </section>
+
+        <!-- Business Hours Section -->
+        <section id="hours-section" class="content-section">
+            <div class="section-header">
+                <h1>Horarios de Atención</h1>
+                <p>Configura los días y horas de atención del spa</p>
+            </div>
+
+            <!-- Horarios Semanales -->
+            <div class="card">
+                <div class="card-header">
+                    <h3>📅 Horarios Semanales</h3>
+                    <button class="btn-primary" id="saveAllHoursBtn">
+                        <i class="fas fa-save"></i>
+                        <span>Guardar Cambios</span>
+                    </button>
+                </div>
+                <div class="card-body">
+                    <div class="hours-grid" id="weeklyHoursContainer">
+                        <!-- Se llena con JS -->
+                        <div class="loading">Cargando horarios...</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Días Festivos -->
+            <div class="card" style="margin-top: 1.5rem;">
+                <div class="card-header">
+                    <h3>🎉 Días Festivos / Horarios Especiales</h3>
+                    <button class="btn-secondary" id="addSpecialDayBtn">
+                        <i class="fas fa-plus"></i>
+                        <span>Agregar Día</span>
+                    </button>
+                </div>
+                <div class="card-body">
+                    <div class="special-days-container">
+                        <table class="data-table" id="specialDaysTable">
+                            <thead>
+                                <tr>
+                                    <th>Fecha</th>
+                                    <th>Nombre</th>
+                                    <th>Estado</th>
+                                    <th>Horario</th>
+                                    <th>Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="specialDaysTableBody">
+                                <!-- Se llena con JS -->
+                            </tbody>
+                        </table>
+                    </div>
+                    <div id="noSpecialDays" class="empty-state-container" style="display: none;">
+                        <div class="empty-icon">📭</div>
+                        <h3>No hay días festivos configurados</h3>
+                        <p>Haz clic en "Agregar Día" para crear un horario especial</p>
+                    </div>
+                </div>
+            </div>
+        </section>
     </main>
 
     <!-- Modal para ver detalles -->
     <div id="reservationModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Detalle de Reserva</h2>
+                <button class="modal-close">×</button>
+            </div>
+            <div class="modal-body" id="modalBody">
+                <!-- Se llena con JS -->
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" id="modalCancel">Cerrar</button>
+                <button class="btn-confirm" id="modalConfirm">Confirmar Reserva</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para día festivo -->
+    <div id="specialDayModal" class="modal">
+        <div class="modal-content modal-medium">
+            <div class="modal-header">
+                <h2 id="specialDayModalTitle">Agregar Día Festivo</h2>
+                <button class="modal-close">×</button>
+            </div>
+            <div class="modal-body">
+                <form id="specialDayForm">
+                    <input type="hidden" id="specialDayId">
+                    <div class="form-group">
+                        <label for="specialDayDate">Fecha *</label>
+                        <input type="date" id="specialDayDate" required class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label for="specialDayName">Nombre del día *</label>
+                        <input type="text" id="specialDayName" placeholder="Ej: Día de Navidad, Año Nuevo, etc." required class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="specialDayIsOpen">
+                            <span>¿El spa está abierto este día?</span>
+                        </label>
+                    </div>
+                    <div id="specialDayHoursContainer" style="display: none;">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="specialDayOpenTime">Hora de apertura</label>
+                                <input type="time" id="specialDayOpenTime" class="form-control">
+                            </div>
+                            <div class="form-group">
+                                <label for="specialDayCloseTime">Hora de cierre</label>
+                                <input type="time" id="specialDayCloseTime" class="form-control">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="specialDayBreakStart">Inicio descanso</label>
+                                <input type="time" id="specialDayBreakStart" class="form-control">
+                            </div>
+                            <div class="form-group">
+                                <label for="specialDayBreakEnd">Fin descanso</label>
+                                <input type="time" id="specialDayBreakEnd" class="form-control">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="specialDayNotes">Notas adicionales</label>
+                        <textarea id="specialDayNotes" rows="3" placeholder="Información adicional..." class="form-control"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" id="specialDayModalCancel">Cancelar</button>
+                <button class="btn-primary" id="specialDayModalSave">Guardar</button>
+            </div>
+        </div>
+    </div>
         <div class="modal-content">
             <div class="modal-header">
                 <h2>Detalle de Reserva</h2>
