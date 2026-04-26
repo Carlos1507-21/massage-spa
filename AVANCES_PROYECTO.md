@@ -303,6 +303,64 @@ massage-spa/
 - Integración futura con formulario de reservas (validar disponibilidad)
 - Integración futura con Google Calendar (respetar horarios)
 
+### 7. Módulo de Gestión de Terapeutas (NUEVO - Abril 2026)
+
+**Backend (`backend/models/Therapist.php`):**
+- Modelo completo para gestión de terapeutas
+- Métodos: `getAll()`, `getById()`, `create()`, `update()`, `delete()`
+- `getAvailableTherapists()` - Obtener terapeutas disponibles para fecha/hora
+- `isAvailableAt()` - Verificar disponibilidad de un terapeuta
+- `getAvailability()` - Obtener disponibilidad semanal
+- `updateAvailability()` - Actualizar horarios de atención
+- `getUnavailableDays()` - Días no disponibles (vacaciones/permisos)
+- `addUnavailableDay()` - Bloquear días específicos
+- `getStats()` - Estadísticas de citas por terapeuta
+
+**API (`backend/api/therapists.php`):**
+- Endpoints REST para CRUD de terapeutas:
+  - GET - Listar / Obtener uno / Disponibilidad / Estadísticas
+  - POST - Crear terapeuta / Actualizar disponibilidad / Bloquear día
+  - PUT - Actualizar terapeuta
+  - DELETE - Eliminar terapeuta / Desbloquear día
+- Autenticación requerida para operaciones de escritura
+
+**Base de datos (`backend/config/database.php`):**
+- Tabla `therapists`: Información de terapeutas
+  - Campos: id, name, email, phone, specialty, bio, photo_url, is_active, max_daily_appointments
+- Tabla `therapist_availability`: Disponibilidad semanal por terapeuta
+  - Campos: therapist_id, day_of_week, is_available, start_time, end_time, break_start, break_end
+- Tabla `therapist_unavailable_days`: Días bloqueados por terapeuta
+  - Campos: therapist_id, date, reason, is_all_day, start_time, end_time
+- Migración: Agrega `therapist_id` a la tabla `reservations`
+- Datos de ejemplo: 3 terapeutas (Ana García, Carlos Mendoza, María Fernández)
+
+**Panel Admin (`admin/dashboard.html` + `admin/js/admin.js` + `admin/css/admin.css`):**
+- Nueva sección "Terapeutas" en sidebar
+- Grid de tarjetas de terapeutas con:
+  - Avatar con iniciales
+  - Nombre, especialidad, email, teléfono
+  - Estado (Activo/Inactivo)
+  - Máximo de citas por día
+  - Biografía
+  - Botones de acción: Disponibilidad, Bloquear día, Editar, Eliminar
+- Modal para agregar/editar terapeuta:
+  - Nombre, email, teléfono, especialidades
+  - Biografía, máximo de citas/día, estado
+- Modal de disponibilidad semanal:
+  - 7 días (Domingo a Sábado)
+  - Toggle "Disponible" por día
+  - Horas de inicio/fin y descanso
+- Modal para bloquear días:
+  - Fecha, motivo
+  - Toggle "Todo el día" o horario específico
+
+**Características:**
+- Validación de disponibilidad al asignar terapeuta a reserva
+- Soporte para múltiples especialidades por terapeuta
+- Control de cupo máximo diario por terapeuta
+- Días no disponibles (vacaciones, permisos médicos, etc.)
+- Estadísticas de citas por terapeuta (pendientes, confirmadas, canceladas)
+
 ---
 
 ## 🎯 Para la próxima sesión
@@ -326,7 +384,7 @@ massage-spa/
 **C. Panel de admin (mejoras):**
 - [ ] Completar sección "Servicios" (CRUD servicios)
 - [ ] Completar sección "Reportes" (gráficos, exportar Excel/PDF)
-- [ ] Gestión de terapeutas/empleados
+- [x] Gestión de terapeutas/empleados ✅ COMPLETADO
 - [x] Configuración de horarios de atención ✅ COMPLETADO
 - [ ] Backup/exportar base de datos
 
@@ -372,11 +430,13 @@ massage-spa/
 | `backend/api/auth.php` | **API de autenticación** |
 | `backend/api/google-calendar.php` | **API de Google Calendar** |
 | `backend/api/business-hours.php` | **API de Horarios de Atención** |
+| `backend/api/therapists.php` | **API de Terapeutas** |
 | `backend/models/Reservation.php` | Modelo de datos |
 | `backend/models/BusinessHours.php` | **Modelo de Horarios** |
+| `backend/models/Therapist.php` | **Modelo de Terapeutas** |
 | `backend/middleware/Auth.php` | **Middleware de auth** |
 | `backend/services/GoogleCalendarService.php` | **Servicio de Google Calendar** |
-| `backend/config/database.php` | **Configuración de BD (tablas horarios)** |
+| `backend/config/database.php` | **Configuración de BD (tablas horarios, terapeutas)** |
 | `backend/config/google-calendar.php` | **Configuración de Google Calendar** |
 
 ---

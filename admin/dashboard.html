@@ -56,6 +56,12 @@
                         <span>Horarios</span>
                     </a>
                 </li>
+                <li>
+                    <a href="#therapists" data-section="therapists">
+                        <i class="fas fa-user-md"></i>
+                        <span>Terapeutas</span>
+                    </a>
+                </li>
             </ul>
         </nav>
 
@@ -369,6 +375,31 @@
                 </div>
             </div>
         </section>
+
+        <!-- Therapists Section -->
+        <section id="therapists-section" class="content-section">
+            <div class="section-header">
+                <h1>Gestión de Terapeutas</h1>
+                <p>Administra el equipo de terapeutas y sus disponibilidades</p>
+            </div>
+
+            <!-- Lista de Terapeutas -->
+            <div class="card">
+                <div class="card-header">
+                    <h3>👥 Equipo de Terapeutas</h3>
+                    <button class="btn-primary" id="addTherapistBtn">
+                        <i class="fas fa-plus"></i>
+                        <span>Agregar Terapeuta</span>
+                    </button>
+                </div>
+                <div class="card-body">
+                    <div class="therapists-grid" id="therapistsGrid">
+                        <!-- Se llena con JS -->
+                        <div class="loading">Cargando terapeutas...</div>
+                    </div>
+                </div>
+            </div>
+        </section>
     </main>
 
     <!-- Modal para ver detalles -->
@@ -390,6 +421,179 @@
 
     <!-- Modal para día festivo -->
     <div id="specialDayModal" class="modal">
+        <div class="modal-content modal-medium">
+            <div class="modal-header">
+                <h2 id="specialDayModalTitle">Agregar Día Festivo</h2>
+                <button class="modal-close">×</button>
+            </div>
+            <div class="modal-body">
+                <form id="specialDayForm">
+                    <input type="hidden" id="specialDayId">
+                    <div class="form-group">
+                        <label for="specialDayDate">Fecha *</label>
+                        <input type="date" id="specialDayDate" required class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label for="specialDayName">Nombre del día *</label>
+                        <input type="text" id="specialDayName" placeholder="Ej: Día de Navidad, Año Nuevo, etc." required class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="specialDayIsOpen">
+                            <span>¿El spa está abierto este día?</span>
+                        </label>
+                    </div>
+                    <div id="specialDayHoursContainer" style="display: none;">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="specialDayOpenTime">Hora de apertura</label>
+                                <input type="time" id="specialDayOpenTime" class="form-control">
+                            </div>
+                            <div class="form-group">
+                                <label for="specialDayCloseTime">Hora de cierre</label>
+                                <input type="time" id="specialDayCloseTime" class="form-control">
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="specialDayBreakStart">Inicio descanso</label>
+                                <input type="time" id="specialDayBreakStart" class="form-control">
+                            </div>
+                            <div class="form-group">
+                                <label for="specialDayBreakEnd">Fin descanso</label>
+                                <input type="time" id="specialDayBreakEnd" class="form-control">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="specialDayNotes">Notas adicionales</label>
+                        <textarea id="specialDayNotes" rows="3" placeholder="Información adicional..." class="form-control"></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" id="specialDayModalCancel">Cancelar</button>
+                <button class="btn-primary" id="specialDayModalSave">Guardar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para agregar/editar terapeuta -->
+    <div id="therapistModal" class="modal">
+        <div class="modal-content modal-medium">
+            <div class="modal-header">
+                <h2 id="therapistModalTitle">Agregar Terapeuta</h2>
+                <button class="modal-close">×</button>
+            </div>
+            <div class="modal-body">
+                <form id="therapistForm">
+                    <input type="hidden" id="therapistId">
+                    <div class="form-group">
+                        <label for="therapistName">Nombre completo *</label>
+                        <input type="text" id="therapistName" required class="form-control" placeholder="Nombre del terapeuta">
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="therapistEmail">Email</label>
+                            <input type="email" id="therapistEmail" class="form-control" placeholder="email@ejemplo.com">
+                        </div>
+                        <div class="form-group">
+                            <label for="therapistPhone">Teléfono</label>
+                            <input type="tel" id="therapistPhone" class="form-control" placeholder="+56912345678">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="therapistSpecialty">Especialidades</label>
+                        <input type="text" id="therapistSpecialty" class="form-control" placeholder="Ej: Masaje Relajante, Aromaterapia">
+                    </div>
+                    <div class="form-group">
+                        <label for="therapistBio">Biografía</label>
+                        <textarea id="therapistBio" rows="3" class="form-control" placeholder="Descripción del terapeuta..."></textarea>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="therapistMaxAppointments">Máx. citas/día</label>
+                            <input type="number" id="therapistMaxAppointments" min="1" max="20" value="8" class="form-control">
+                        </div>
+                        <div class="form-group">
+                            <label class="checkbox-label" style="margin-top: 2rem;">
+                                <input type="checkbox" id="therapistIsActive" checked>
+                                <span>Terapeuta activo</span>
+                            </label>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" id="therapistModalCancel">Cancelar</button>
+                <button class="btn-primary" id="therapistModalSave">Guardar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para disponibilidad de terapeuta -->
+    <div id="therapistAvailabilityModal" class="modal">
+        <div class="modal-content modal-large">
+            <div class="modal-header">
+                <h2 id="availabilityModalTitle">Disponibilidad de Terapeuta</h2>
+                <button class="modal-close">×</button>
+            </div>
+            <div class="modal-body">
+                <div id="therapistAvailabilityContainer">
+                    <div class="loading">Cargando disponibilidad...</div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" id="availabilityModalCancel">Cerrar</button>
+                <button class="btn-primary" id="availabilityModalSave">Guardar Disponibilidad</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para días no disponibles -->
+    <div id="therapistUnavailableModal" class="modal">
+        <div class="modal-content modal-medium">
+            <div class="modal-header">
+                <h2>Agregar Día No Disponible</h2>
+                <button class="modal-close">×</button>
+            </div>
+            <div class="modal-body">
+                <form id="therapistUnavailableForm">
+                    <input type="hidden" id="unavailableTherapistId">
+                    <div class="form-group">
+                        <label for="unavailableDate">Fecha *</label>
+                        <input type="date" id="unavailableDate" required class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label for="unavailableReason">Motivo</label>
+                        <input type="text" id="unavailableReason" class="form-control" placeholder="Ej: Vacaciones, Permiso médico, etc.">
+                    </div>
+                    <div class="form-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="unavailableAllDay" checked onchange="toggleUnavailableTime()">
+                            <span>Todo el día</span>
+                        </label>
+                    </div>
+                    <div id="unavailableTimeContainer" style="display: none;">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="unavailableStartTime">Hora inicio</label>
+                                <input type="time" id="unavailableStartTime" class="form-control">
+                            </div>
+                            <div class="form-group">
+                                <label for="unavailableEndTime">Hora fin</label>
+                                <input type="time" id="unavailableEndTime" class="form-control">
+                            </div>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" id="unavailableModalCancel">Cancelar</button>
+                <button class="btn-primary" id="unavailableModalSave">Guardar</button>
+            </div>
+        </div>
+    </div>
         <div class="modal-content modal-medium">
             <div class="modal-header">
                 <h2 id="specialDayModalTitle">Agregar Día Festivo</h2>

@@ -131,6 +131,92 @@ function initDatabase() {
             updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
             UNIQUE KEY unique_date (date)
         ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+        -- Tabla de terapeutas
+        CREATE TABLE IF NOT EXISTS therapists (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            name VARCHAR(100) NOT NULL,
+            email VARCHAR(100),
+            phone VARCHAR(20),
+            specialty VARCHAR(100) COMMENT 'Especialidades principales',
+            bio TEXT COMMENT 'Biografía/descripción del terapeuta',
+            photo_url VARCHAR(255),
+            is_active BOOLEAN DEFAULT TRUE,
+            max_daily_appointments INT DEFAULT 8 COMMENT 'Máximo de citas por día',
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            INDEX idx_active (is_active),
+            INDEX idx_specialty (specialty)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+        -- Tabla de disponibilidad específica de terapeutas
+        CREATE TABLE IF NOT EXISTS therapist_availability (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            therapist_id INT NOT NULL,
+            day_of_week INT NOT NULL COMMENT '0=Domingo, 1=Lunes, ..., 6=Sábado',
+            is_available BOOLEAN DEFAULT TRUE,
+            start_time TIME,
+            end_time TIME,
+            break_start TIME,
+            break_end TIME,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+            FOREIGN KEY (therapist_id) REFERENCES therapists(id) ON DELETE CASCADE,
+            UNIQUE KEY unique_therapist_day (therapist_id, day_of_week)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+        -- Tabla de días no disponibles del terapeuta (vacaciones, permisos)
+        CREATE TABLE IF NOT EXISTS therapist_unavailable_days (
+            id INT AUTO_INCREMENT PRIMARY KEY,
+            therapist_id INT NOT NULL,
+            date DATE NOT NULL,
+            reason VARCHAR(255),
+            is_all_day BOOLEAN DEFAULT TRUE,
+            start_time TIME,
+            end_time TIME,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (therapist_id) REFERENCES therapists(id) ON DELETE CASCADE,
+            INDEX idx_date (date),
+            UNIQUE KEY unique_therapist_date (therapist_id, date)
+        ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+        -- Agregar columna therapist_id a reservations si no existe
+        SET @exist_therapist := (SELECT COUNT(*) FROM information_schema.columns
+            WHERE table_schema = DATABASE()
+            AND table_name = 'reservations'
+            AND column_name = 'therapist_id');
+        SET @sql_therapist := IF(@exist_therapist = 0,
+            'ALTER TABLE reservations ADD COLUMN therapist_id INT NULL AFTER status,
+             ADD FOREIGN KEY (therapist_id) REFERENCES therapists(id) ON DELETE SET NULL',
+            'SELECT 1');
+        PREPARE stmt_therapist FROM @sql_therapist;
+        EXECUTE stmt_therapist;
+        DEALLOCATE PREPARE stmt_therapist;
+
+        -- Datos de ejemplo de terapeutas
+        INSERT INTO therapists (name, email, phone, specialty, bio, is_active, max_daily_appointments)
+        VALUES
+            ('Ana García', 'ana@sanacionconsciente.cl', '+56912345678', 'Masaje Relajante, Aromaterapia', 'Terapeuta certificada con 5 años de experiencia en masajes relajantes y aromaterapia.', TRUE, 6),
+            ('Carlos Mendoza', 'carlos@sanacionconsciente.cl', '+56923456789', 'Masaje Terapéutico, Piedras Calientes', 'Especialista en terapia de tejidos profundos y masaje con piedras calientes.', TRUE, 8),
+            ('María Fernández', 'maria@sanacionconsciente.cl', '+56934567890', 'Reflexología, Masaje Prenatal', 'Experta en reflexología podal y masajes especializados para embarazadas.', TRUE, 6)
+        ON DUPLICATE KEY UPDATE name = VALUES(name);
+
+        -- Disponibilidad por defecto para terapeutas (Lunes a Viernes 9:00-18:00)
+        INSERT INTO therapist_availability (therapist_id, day_of_week, is_available, start_time, end_time, break_start, break_end)
+        SELECT id, 1, TRUE, '09:00:00', '18:00:00', '13:00:00', '14:00:00' FROM therapists WHERE id = 1
+        ON DUPLICATE KEY UPDATE is_available = VALUES(is_available);
+        INSERT INTO therapist_availability (therapist_id, day_of_week, is_available, start_time, end_time, break_start, break_end)
+        SELECT id, 2, TRUE, '09:00:00', '18:00:00', '13:00:00', '14:00:00' FROM therapists WHERE id = 1
+        ON DUPLICATE KEY UPDATE is_available = VALUES(is_available);
+        INSERT INTO therapist_availability (therapist_id, day_of_week, is_available, start_time, end_time, break_start, break_end)
+        SELECT id, 3, TRUE, '09:00:00', '18:00:00', '13:00:00', '14:00:00' FROM therapists WHERE id = 1
+        ON DUPLICATE KEY UPDATE is_available = VALUES(is_available);
+        INSERT INTO therapist_availability (therapist_id, day_of_week, is_available, start_time, end_time, break_start, break_end)
+        SELECT id, 4, TRUE, '09:00:00', '18:00:00', '13:00:00', '14:00:00' FROM therapists WHERE id = 1
+        ON DUPLICATE KEY UPDATE is_available = VALUES(is_available);
+        INSERT INTO therapist_availability (therapist_id, day_of_week, is_available, start_time, end_time, break_start, break_end)
+        SELECT id, 5, TRUE, '09:00:00', '18:00:00', '13:00:00', '14:00:00' FROM therapists WHERE id = 1
+        ON DUPLICATE KEY UPDATE is_available = VALUES(is_available);
     ";
 
     try {
