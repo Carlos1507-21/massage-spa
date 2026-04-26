@@ -1,7 +1,7 @@
 # 🌿 Sanación Consciente - Registro de Avances del Proyecto
 
-**Fecha última actualización:** 2026-04-22
-**Estado:** Módulo de Horarios de Atención completo (semanal + días festivos)
+**Fecha última actualización:** 2026-04-26
+**Estado:** Simplificado para negocio personal (una sola terapeuta a domicilio)
 **Próxima sesión:** Revisar panel admin o continuar con otras funcionalidades
 
 ---
@@ -148,8 +148,11 @@ massage-spa/
 |---------|--------|-------------|
 | Dashboard | ✅ Listo | Resumen y estadísticas |
 | Reservas | ✅ Listo | Gestión completa con tabla |
+| Horarios | ✅ Listo | Configuración de horarios de atención y días festivos |
 | Servicios | 🚧 Placeholder | Para futura edición de servicios |
 | Reportes | 🚧 Placeholder | Para futuros reportes avanzados |
+| Integraciones | ✅ Listo | Google Calendar (listo para conectar credenciales) |
+| Terapeutas | ❌ Removido | No aplica: negocio personal de una sola persona |
 
 ### 5. Archivos de proyecto
 - ✅ `.htaccess` - Configuración Apache + seguridad
@@ -303,63 +306,24 @@ massage-spa/
 - Integración futura con formulario de reservas (validar disponibilidad)
 - Integración futura con Google Calendar (respetar horarios)
 
-### 7. Módulo de Gestión de Terapeutas (NUEVO - Abril 2026)
+### 7. Módulo de Gestión de Terapeutas (NUEVO - Abril 2026) → REMOVIDO
 
-**Backend (`backend/models/Therapist.php`):**
-- Modelo completo para gestión de terapeutas
-- Métodos: `getAll()`, `getById()`, `create()`, `update()`, `delete()`
-- `getAvailableTherapists()` - Obtener terapeutas disponibles para fecha/hora
-- `isAvailableAt()` - Verificar disponibilidad de un terapeuta
-- `getAvailability()` - Obtener disponibilidad semanal
-- `updateAvailability()` - Actualizar horarios de atención
-- `getUnavailableDays()` - Días no disponibles (vacaciones/permisos)
-- `addUnavailableDay()` - Bloquear días específicos
-- `getStats()` - Estadísticas de citas por terapeuta
+**Nota:** Este módulo fue implementado por los compañeros pero luego se decidió removerlo ya que el negocio es personal: una sola terapeuta que atiende en su casa.
 
-**API (`backend/api/therapists.php`):**
-- Endpoints REST para CRUD de terapeutas:
-  - GET - Listar / Obtener uno / Disponibilidad / Estadísticas
-  - POST - Crear terapeuta / Actualizar disponibilidad / Bloquear día
-  - PUT - Actualizar terapeuta
-  - DELETE - Eliminar terapeuta / Desbloquear día
-- Autenticación requerida para operaciones de escritura
+**Archivos existentes pero no utilizados activamente:**
+- `backend/models/Therapist.php`
+- `backend/api/therapists.php`
+- Tablas en BD: `therapists`, `therapist_availability`, `therapist_unavailable_days`
 
-**Base de datos (`backend/config/database.php`):**
-- Tabla `therapists`: Información de terapeutas
-  - Campos: id, name, email, phone, specialty, bio, photo_url, is_active, max_daily_appointments
-- Tabla `therapist_availability`: Disponibilidad semanal por terapeuta
-  - Campos: therapist_id, day_of_week, is_available, start_time, end_time, break_start, break_end
-- Tabla `therapist_unavailable_days`: Días bloqueados por terapeuta
-  - Campos: therapist_id, date, reason, is_all_day, start_time, end_time
-- Migración: Agrega `therapist_id` a la tabla `reservations`
-- Datos de ejemplo: 3 terapeutas (Ana García, Carlos Mendoza, María Fernández)
+**Razón de la remoción del panel admin:**
+- No tiene sentido gestionar "equipo de terapeutas" cuando es una sola persona
+- Los horarios de atención se manejan en el módulo de Horarios de Atención
+- El frontend fue ajustado a lenguaje personal ("Sobre Mí", "Mis Servicios", etc.)
 
-**Panel Admin (`admin/dashboard.html` + `admin/js/admin.js` + `admin/css/admin.css`):**
-- Nueva sección "Terapeutas" en sidebar
-- Grid de tarjetas de terapeutas con:
-  - Avatar con iniciales
-  - Nombre, especialidad, email, teléfono
-  - Estado (Activo/Inactivo)
-  - Máximo de citas por día
-  - Biografía
-  - Botones de acción: Disponibilidad, Bloquear día, Editar, Eliminar
-- Modal para agregar/editar terapeuta:
-  - Nombre, email, teléfono, especialidades
-  - Biografía, máximo de citas/día, estado
-- Modal de disponibilidad semanal:
-  - 7 días (Domingo a Sábado)
-  - Toggle "Disponible" por día
-  - Horas de inicio/fin y descanso
-- Modal para bloquear días:
-  - Fecha, motivo
-  - Toggle "Todo el día" o horario específico
-
-**Características:**
-- Validación de disponibilidad al asignar terapeuta a reserva
-- Soporte para múltiples especialidades por terapeuta
-- Control de cupo máximo diario por terapeuta
-- Días no disponibles (vacaciones, permisos médicos, etc.)
-- Estadísticas de citas por terapeuta (pendientes, confirmadas, canceladas)
+**En su lugar:**
+- El módulo de **Horarios de Atención** cubre la programación semanal
+- Los días no disponibles (vacaciones, permisos) se pueden gestionar como días festivos en el módulo de Horarios
+- No se requiere asignar terapeuta a cada reserva
 
 ---
 
@@ -384,7 +348,6 @@ massage-spa/
 **C. Panel de admin (mejoras):**
 - [ ] Completar sección "Servicios" (CRUD servicios)
 - [ ] Completar sección "Reportes" (gráficos, exportar Excel/PDF)
-- [x] Gestión de terapeutas/empleados ✅ COMPLETADO
 - [x] Configuración de horarios de atención ✅ COMPLETADO
 - [ ] Backup/exportar base de datos
 
@@ -404,6 +367,7 @@ massage-spa/
 ## 📝 Notas importantes
 
 - El usuario pidió spa de masajes → se creó "Sanación Consciente"
+- Es un **negocio personal**: una sola terapeuta que atiende masajes en su casa (NO un spa con equipo)
 - El usuario pidió estructura con frontend/backend → se hizo separación clara
 - El usuario pidió panel de administración → se creó completo con login, dashboard y gestión de reservas
 - El formulario de reservas está funcional pero guarda en BD solo con servidor PHP
@@ -412,6 +376,7 @@ massage-spa/
 - Hay comentarios TODO en el código marcando futuras mejoras
 - El panel admin tiene datos de demostración para poder probarlo sin servidor
 - **Google Calendar:** para activar, editar `backend/config/google-calendar.php` y reemplazar los placeholders con credenciales reales de Google Cloud Console
+- **Módulo de Terapeutas:** fue removido del panel admin porque no aplica a un negocio personal (los archivos del backend aún existen en el repo por si se necesitan en el futuro)
 
 ---
 
