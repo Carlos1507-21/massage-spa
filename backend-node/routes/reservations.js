@@ -6,6 +6,7 @@ const express = require('express');
 const router = express.Router();
 const Reservation = require('../models/reservation');
 const { requireAuth, jsonResponse } = require('../middleware/auth');
+const googleCalendarService = require('../services/googleCalendar');
 
 /**
  * GET /backend/api/reservations
@@ -65,9 +66,17 @@ router.post('/', async (req, res) => {
                 id: id
             };
 
-            // TODO: Enviar email de confirmación
-            // TODO: Notificar al admin
-            // TODO: Sincronizar con Google Calendar
+            // Sincronizar con Google Calendar
+            try {
+                const connected = await googleCalendarService.isConnected();
+                if (connected && data.date && data.time) {
+                    const eventId = await googleCalendarService.createEvent(data);
+                    await Reservation.setCalendarEventId(id, eventId);
+                }
+            } catch (calErr) {
+                console.error('Error sincronizando con Google Calendar:', calErr.message);
+                // No fallar la reserva si Google Calendar falla
+            }
 
             return res.status(201).json(response);
         } else {
@@ -98,8 +107,29 @@ router.put('/', requireAuth, async (req, res) => {
         const result = await Reservation.updateStatus(id, status);
 
         if (result) {
-            // TODO: Enviar email según el nuevo estado
-            // TODO: Sincronizar con Google Calendar
+            // Sincronizar con Google Calendar
+            try {
+                const connected = await googleCalendarService.isConnected();
+                if (connected) {
+                    const reservation = await Reservation.getById(id);
+                    if (reservation) {
+                        if (status === 'cancelled' && reservation.calendar_event_id) {
+                            await googleCalendarService.deleteEvent(reservation.calendar_event_id);
+                            await Reservation.setCalendarEventId(id, null);
+                        } else if (status === 'confirmed') {
+                            if (reservation.calendar_event_id) {
+                                await googleCalendarService.updateEvent(reservation.calendar_event_id, reservation);
+                            } else if (reservation.reservation_date && reservation.reservation_time) {
+                                const eventId = await googleCalendarService.createEvent(reservation);
+                                await Reservation.setCalendarEventId(id, eventId);
+                            }
+                        }
+                    }
+                }
+            } catch (calErr) {
+                console.error('Error sincronizando con Google Calendar:', calErr.message);
+                // No fallar si Google Calendar falla
+            }
 
             return jsonResponse(res, true, 'Reserva actualizada');
         } else {
@@ -122,9 +152,18 @@ router.delete('/', requireAuth, async (req, res) => {
             return jsonResponse(res, false, 'ID requerido', null, 400);
         }
 
+        const reservation = await Reservation.getById(id);
         const result = await Reservation.delete(id);
 
         if (result) {
+            // Eliminar de Google Calendar si existe
+            if (reservation && reservation.calendar_event_id) {
+                try {
+                    await googleCalendarService.deleteEvent(reservation.calendar_event_id);
+                } catch (calErr) {
+                    console.error('Error eliminando evento de Google Calendar:', calErr.message);
+                }
+            }
             return jsonResponse(res, true, 'Reserva eliminada');
         } else {
             return jsonResponse(res, false, 'Error al eliminar', null, 500);
