@@ -911,6 +911,7 @@ body:not(.login-page) {
 /* Modal */
 .modal {
     display: none;
+    visibility: hidden;
     position: fixed;
     top: 0;
     left: 0;
@@ -920,10 +921,13 @@ body:not(.login-page) {
     z-index: 1000;
     align-items: center;
     justify-content: center;
+    pointer-events: none;
 }
 
 .modal.active {
     display: flex;
+    visibility: visible;
+    pointer-events: auto;
 }
 
 .modal-content {
@@ -1809,4 +1813,50 @@ body:not(.login-page) {
     .availability-times {
         grid-template-columns: 1fr;
     }
+}
+
+/* ============================================
+   DEVELOPER CREDIT
+   ============================================ */
+
+.dev-credit {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 12px;
+    cursor: default;
+}
+
+.dev-credit-trigger {
+    font-family: 'Playfair Display', serif;
+    font-size: 0.85rem;
+    color: var(--primary-color);
+    opacity: 0.4;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    user-select: none;
+}
+
+.dev-credit-text {
+    font-family: 'Open Sans', sans-serif;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    opacity: 0;
+    max-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    transform: translateY(-4px);
+    transition: all 0.4s ease;
+}
+
+.dev-credit:hover .dev-credit-trigger {
+    opacity: 1;
+    color: var(--primary-color);
+}
+
+.dev-credit:hover .dev-credit-text {
+    opacity: 1;
+    max-width: 220px;
+    transform: translateY(0);
 }

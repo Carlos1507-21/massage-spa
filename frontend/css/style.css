@@ -1073,3 +1073,46 @@ section {
         box-shadow: 0 0 0 0 rgba(37, 211, 102, 0);
     }
 }
+
+/* Developer Credit */
+.dev-credit {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 12px;
+    cursor: default;
+}
+
+.dev-credit-trigger {
+    font-family: 'Playfair Display', serif;
+    font-size: 0.85rem;
+    color: var(--primary-color);
+    opacity: 0.4;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    user-select: none;
+}
+
+.dev-credit-text {
+    font-family: 'Open Sans', sans-serif;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    opacity: 0;
+    max-width: 0;
+    overflow: hidden;
+    white-space: nowrap;
+    transform: translateY(-4px);
+    transition: all 0.4s ease;
+}
+
+.dev-credit:hover .dev-credit-trigger {
+    opacity: 1;
+    color: var(--primary-color);
+}
+
+.dev-credit:hover .dev-credit-text {
+    opacity: 1;
+    max-width: 220px;
+    transform: translateY(0);
+}
