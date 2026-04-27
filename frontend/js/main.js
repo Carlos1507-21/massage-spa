@@ -105,15 +105,17 @@ async function handleFormSubmit(e) {
     submitBtn.disabled = true;
 
     try {
-        // In a real app, this would send to the backend
-        // const response = await fetch('../backend/api/reservations.php', {
-        //     method: 'POST',
-        //     headers: { 'Content-Type': 'application/json' },
-        //     body: JSON.stringify(formData)
-        // });
+        const response = await fetch('/backend/api/reservations', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(formData)
+        });
 
-        // Simulate API call
-        await new Promise(resolve => setTimeout(resolve, 1500));
+        const result = await response.json();
+
+        if (!result.success) {
+            throw new Error(result.message || 'Error al crear la reserva');
+        }
 
         // Guardar reserva en localStorage (para modo demo sin servidor)
         saveReservation(formData);
@@ -152,7 +154,7 @@ function showNotification(message, type = 'success') {
         position: 'fixed',
         top: '100px',
         right: '20px',
-        background: type === 'success' ? '#2d5a4a' : '#c44d4d',
+        background: type === 'success' ? '#4CAF7A' : '#c44d4d',
         color: 'white',
         padding: '20px 25px',
         borderRadius: '12px',
@@ -240,5 +242,5 @@ function saveReservation(data) {
 // Exportar para uso global
 window.saveReservation = saveReservation;
 
-console.log('🌿 Sanación Consciente - Bienvenido a tu oasis de tranquilidad');
+console.log('🌿 Sanación Consciente ASA - Bienvenido a tu oasis de tranquilidad');
 console.log('💡 Tip: Usa EmailTester.getInbox() en la consola para ver emails enviados');

@@ -21,8 +21,15 @@ document.addEventListener('DOMContentLoaded', function() {
 
 // Check authentication
 async function checkAuth() {
+    // Modo demo: si la URL tiene ?demo=1, no verificar auth
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('demo') === '1') {
+        console.log('Demo mode: auth check skipped');
+        return;
+    }
+
     try {
-        const response = await fetch('../backend/api/auth.php?action=check');
+        const response = await fetch('/backend/api/auth/check', { credentials: 'include' });
         const data = await response.json();
 
         if (!data.success) {
@@ -30,8 +37,10 @@ async function checkAuth() {
         }
     } catch (error) {
         console.error('Auth check error:', error);
-        // En desarrollo, permitir acceso
-        // window.location.href = 'login.html';
+        // Si no hay servidor PHP, redirigir a login para entrar en modo demo
+        if (!window.location.search.includes('demo=1')) {
+            window.location.href = 'login.html';
+        }
     }
 }
 
@@ -108,7 +117,7 @@ async function initStats() {
 // Update statistics
 async function updateStats() {
     try {
-        const response = await fetch('../backend/api/reservations.php');
+        const response = await fetch('/backend/api/reservations', { credentials: 'include' });
         const data = await response.json();
 
         if (data.success && data.data) {
@@ -236,8 +245,8 @@ async function loadReservations() {
     try {
         const filter = document.getElementById('filterStatus')?.value || 'all';
         const url = filter === 'all'
-            ? '../backend/api/reservations.php'
-            : `../backend/api/reservations.php?status=${filter}`;
+            ? '/backend/api/reservations'
+            : `/backend/api/reservations?status=${filter}`;
 
         const response = await fetch(url);
         const data = await response.json();
@@ -325,7 +334,7 @@ function createReservationRow(r) {
 // View reservation detail
 async function viewReservation(id) {
     try {
-        const response = await fetch(`../backend/api/reservations.php?id=${id}`);
+        const response = await fetch(`/backend/api/reservations?id=${id}`, { credentials: 'include' });
         const data = await response.json();
 
         if (data.success && data.data) {
@@ -402,9 +411,10 @@ async function viewReservation(id) {
 // Update reservation status
 async function updateReservationStatus(id, status) {
     try {
-        const response = await fetch('../backend/api/reservations.php', {
+        const response = await fetch('/backend/api/reservations', {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
             body: JSON.stringify({ id, status })
         });
 
@@ -459,7 +469,7 @@ function initLogout() {
     if (logoutBtn) {
         logoutBtn.addEventListener('click', async () => {
             try {
-                await fetch('../backend/api/auth.php?action=logout');
+                await fetch('/backend/api/auth/logout', { method: 'POST', credentials: 'include' });
                 window.location.href = 'login.html';
             } catch (error) {
                 console.error('Logout error:', error);
@@ -622,7 +632,7 @@ function initIntegrations() {
     if (connectBtn) {
         connectBtn.addEventListener('click', async () => {
             try {
-                const response = await fetch('../backend/api/google-calendar.php?action=auth-url', {
+                const response = await fetch('/backend/api/google-calendar?action=auth-url', {
                     method: 'POST',
                     credentials: 'include'
                 });
@@ -647,7 +657,7 @@ function initIntegrations() {
             }
 
             try {
-                const response = await fetch('../backend/api/google-calendar.php?action=disconnect', {
+                const response = await fetch('/backend/api/google-calendar?action=disconnect', {
                     method: 'POST',
                     credentials: 'include'
                 });
@@ -672,7 +682,7 @@ function initIntegrations() {
             syncAllBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sincronizando...';
 
             try {
-                const response = await fetch('../backend/api/google-calendar.php?action=sync-all', {
+                const response = await fetch('/backend/api/google-calendar?action=sync-all', {
                     method: 'POST',
                     credentials: 'include'
                 });
@@ -710,7 +720,7 @@ async function loadCalendarStatus() {
     if (!statusEl) return;
 
     try {
-        const response = await fetch('../backend/api/google-calendar.php?action=status', {
+        const response = await fetch('/backend/api/google-calendar?action=status', {
             credentials: 'include'
         });
         const data = await response.json();
@@ -846,7 +856,7 @@ function initBusinessHours() {
 
 async function loadBusinessHours() {
     try {
-        const response = await fetch('../backend/api/business-hours.php');
+        const response = await fetch('/backend/api/business-hours');
         const data = await response.json();
 
         if (data.success) {
@@ -855,7 +865,7 @@ async function loadBusinessHours() {
         }
 
         // Load special days
-        const specialResponse = await fetch('../backend/api/business-hours.php?special_days=1');
+        const specialResponse = await fetch('/backend/api/business-hours?special_days=1');
         const specialData = await specialResponse.json();
 
         if (specialData.success) {
@@ -982,7 +992,7 @@ async function saveAllHours() {
                 is_active: true
             };
 
-            const response = await fetch('../backend/api/business-hours.php', {
+            const response = await fetch('/backend/api/business-hours', {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(data)
@@ -1115,7 +1125,7 @@ async function saveSpecialDay() {
     }
 
     try {
-        const response = await fetch('../backend/api/business-hours.php', {
+        const response = await fetch('/backend/api/business-hours', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data)
@@ -1151,7 +1161,7 @@ async function deleteSpecialDay(id) {
     if (!confirm('¿Estás seguro de eliminar este día festivo?')) return;
 
     try {
-        const response = await fetch('../backend/api/business-hours.php', {
+        const response = await fetch('/backend/api/business-hours', {
             method: 'DELETE',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ action: 'delete_special_day', id })

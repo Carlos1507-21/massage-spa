@@ -133,4 +133,42 @@
     .contact-form {
         padding: 25px;
     }
+
+    .promo-card {
+        grid-template-columns: 1fr;
+        padding: 40px 25px;
+        gap: 40px;
+    }
+
+    .promo-image-wrapper {
+        width: 220px;
+        height: 220px;
+    }
+
+    .promo-image {
+        font-size: 4rem;
+    }
+
+    .promo-badge {
+        width: 65px;
+        height: 65px;
+        font-size: 1.3rem;
+    }
+
+    .promo-title {
+        font-size: 2rem;
+        text-align: center;
+    }
+
+    .promo-content {
+        align-items: center;
+    }
+
+    .promo-desc {
+        text-align: center;
+    }
+
+    .promo-price {
+        justify-content: center;
+    }
 }

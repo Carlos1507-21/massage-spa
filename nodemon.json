@@ -1,0 +1,8 @@
+{
+  "watch": ["server.js", "backend-node/"],
+  "ext": "js,json",
+  "ignore": ["node_modules/", "frontend/", "admin/"],
+  "env": {
+    "NODE_ENV": "development"
+  }
+}

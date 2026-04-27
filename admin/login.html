@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Panel de Administración - Sanación Consciente</title>
+    <title>Panel de Administración - Sanación Consciente ASA</title>
     <link rel="stylesheet" href="css/admin.css">
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Open+Sans:wght@300;400;600&display=swap" rel="stylesheet">
 </head>
@@ -11,7 +11,7 @@
     <div class="login-container">
         <div class="login-box">
             <div class="login-header">
-                <h1>🌿 Sanación Consciente</h1>
+                <h1>🌿 Sanación Consciente ASA</h1>
                 <p>Panel de Administración</p>
             </div>
 
@@ -82,9 +82,10 @@
             };
 
             try {
-                const response = await fetch('../backend/api/auth.php?action=login', {
+                const response = await fetch('/backend/api/auth/login', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
+                    credentials: 'include',
                     body: JSON.stringify(formData)
                 });
 
@@ -99,8 +100,13 @@
                     showNotification(data.message || 'Credenciales incorrectas', 'error');
                 }
             } catch (error) {
-                showNotification('Error de conexión', 'error');
-                console.error('Error:', error);
+                // Si no hay servidor PHP, permitir acceso en modo demo
+                showNotification('Servidor PHP no detectado. Entrando en modo demo...', 'info');
+                console.log('Demo mode: redirecting to dashboard');
+                setTimeout(() => {
+                    window.location.href = 'dashboard.html?demo=1';
+                }, 1500);
+                return;
             } finally {
                 btnText.style.display = 'inline';
                 btnLoading.style.display = 'none';

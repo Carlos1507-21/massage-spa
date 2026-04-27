@@ -1,5 +1,5 @@
 
-# 🌿 Sanación Consciente - Sistema de Reservas
+# 🌿 Sanación Consciente ASA - Sistema de Reservas
 
 Sistema web completo para la gestión de reservas de un spa de masajes terapéuticos.
 

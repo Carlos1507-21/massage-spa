@@ -1,8 +1,9 @@
-# 🌿 Sanación Consciente - Registro de Avances del Proyecto
+# 🌿 Sanación Consciente ASA - Registro de Avances del Proyecto
 
 **Fecha última actualización:** 2026-04-26
 **Estado:** Simplificado para negocio personal (una sola terapeuta a domicilio)
-**Próxima sesión:** Revisar panel admin o continuar con otras funcionalidades
+**Migración:** PHP → Node.js/Express + PostgreSQL ✅ COMPLETADA
+**Próxima sesión:** Google Calendar, mejoras de UI, deploy
 
 ---
 
@@ -11,25 +12,75 @@
 ### 1. Estructura de carpetas (Buenas prácticas)
 ```
 massage-spa/
-├── frontend/           → Interfaz de usuario (HTML/CSS/JS)
-├── backend/            → API y lógica del servidor (PHP)
-│   ├── 📂 api/           → Endpoints REST
-│   │   ├── reservations.php
-│   │   └── auth.php      # Login/logout/check
-│   ├── 📂 models/        → Clases de datos
-│   │   └── Reservation.php
-│   ├── 📂 config/        → Configuración BD
-│   └── 📂 middleware/    → Autenticación lista
-│       └── Auth.php
-├── 📂 admin/             # ⭐ NUEVO: PANEL DE ADMIN
-│   ├── login.html        # Página de login
-│   ├── dashboard.html    # Dashboard principal
+├── frontend/            → Interfaz de usuario (HTML/CSS/JS)
+├── backend/             → API original (PHP) - LEGACY
+│   ├── 📂 api/
+│   ├── 📂 models/
+│   ├── 📂 config/
+│   └── 📂 middleware/
+├── backend-node/        → API nueva (Node.js/Express) - EN DESARROLLO
+│   ├── 📂 routes/         → Endpoints REST
+│   │   ├── auth.js
+│   │   ├── reservations.js
+│   │   ├── therapists.js
+│   │   ├── business-hours.js
+│   │   └── index.js
+│   ├── 📂 models/         → Clases de datos (PostgreSQL)
+│   │   ├── reservation.js
+│   │   ├── therapist.js
+│   │   └── businessHours.js
+│   ├── 📂 config/         → Configuración BD
+│   │   └── database.js
+│   ├── 📂 middleware/     → Autenticación
+│   │   └── auth.js
+│   └── 📂 services/       → Servicios externos (email, calendar)
+├── 📂 admin/              # ⭐ PANEL DE ADMIN
+│   ├── login.html
+│   ├── dashboard.html
 │   ├── 📂 css/
-│   │   └── admin.css     # Estilos del panel (~900 líneas)
 │   └── 📂 js/
-│       └── admin.js      # Lógica del panel
-└── 📂 docs/              → Documentación
+└── 📂 docs/               → Documentación
 ```
+
+---
+
+## 🔥 MIGRACIÓN PHP → NODE.JS (EN PROGRESO)
+
+### Estado de la migración
+
+| Componente | Estado | Archivos |
+|------------|--------|----------|
+| Servidor Express | ✅ Listo | `server.js` |
+| Configuración BD PostgreSQL | ✅ Listo | `backend-node/config/database.js` |
+| Auth middleware | ✅ Listo | `backend-node/middleware/auth.js` |
+| Rutas API | ✅ Listo | `backend-node/routes/*.js` |
+| Modelo Reservation | ✅ Listo | `backend-node/models/reservation.js` |
+| Modelo Therapist | ✅ Listo | `backend-node/models/therapist.js` |
+| Modelo BusinessHours | ✅ Listo | `backend-node/models/businessHours.js` |
+| Script init DB PostgreSQL | ✅ Listo | `backend-node/config/init-db.js` |
+| Servicio Email (nodemailer) | ✅ Listo | `backend-node/services/email.js` |
+| Servicio Google Calendar | 🚧 Pendiente | `backend-node/services/googleCalendar.js` |
+| Ajustar URLs frontend | ✅ Listo | `frontend/js/main.js`, `admin/js/admin.js` |
+| Tests de endpoints | ✅ Listo | Verificado con curl |
+
+### Diferencias clave PHP → Node.js
+
+| Aspecto | PHP (Legacy) | Node.js (Nuevo) |
+|---------|--------------|-------------------|
+| Servidor | Apache + PHP | Express.js |
+| Base de datos | MySQL | PostgreSQL |
+| Conexión BD | PDO | `pg` (node-postgres) Pool |
+| Auth | Sesiones PHP + bcrypt | `express-session` + bcryptjs |
+| Email | PHPMailer | nodemailer |
+| Respuestas | `echo json_encode()` | `res.json()` |
+| URLs | `auth.php?action=login` | `/auth/login` |
+| CORS | Headers manuales | Middleware `cors` |
+
+---
+
+## ✅ Lo que ya está construido (detallado)
+
+### 1. Estructura de carpetas (Buenas prácticas)
 
 ### 2. Frontend completo (100%)
 
@@ -366,7 +417,7 @@ massage-spa/
 
 ## 📝 Notas importantes
 
-- El usuario pidió spa de masajes → se creó "Sanación Consciente"
+- El usuario pidió spa de masajes → se creó "Sanación Consciente ASA"
 - Es un **negocio personal**: una sola terapeuta que atiende masajes en su casa (NO un spa con equipo)
 - El usuario pidió estructura con frontend/backend → se hizo separación clara
 - El usuario pidió panel de administración → se creó completo con login, dashboard y gestión de reservas

@@ -1,51 +1,79 @@
-const http = require('http');
-const fs = require('fs');
+// ============================================
+// SANACIÓN CONSCIENTE - Express Server
+// ============================================
+
+require('dotenv').config();
+
+const express = require('express');
+const cors = require('cors');
+const session = require('express-session');
 const path = require('path');
 
-const PORT = 3000;
-const BASE_DIR = __dirname;
+const routes = require('./backend-node/routes');
 
-const MIME_TYPES = {
-  '.html': 'text/html',
-  '.css': 'text/css',
-  '.js': 'text/javascript',
-  '.json': 'application/json',
-  '.png': 'image/png',
-  '.jpg': 'image/jpeg',
-  '.jpeg': 'image/jpeg',
-  '.gif': 'image/gif',
-  '.svg': 'image/svg+xml',
-  '.ico': 'image/x-icon'
-};
+const app = express();
+const PORT = process.env.PORT || 3005;
 
-const server = http.createServer((req, res) => {
-  let filePath = path.join(BASE_DIR, req.url === '/' ? '/frontend/index.html' : req.url);
+// ============================================
+// MIDDLEWARE GLOBAL
+// ============================================
 
-  // Si es una carpeta, buscar index.html
-  if (fs.existsSync(filePath) && fs.statSync(filePath).isDirectory()) {
-    filePath = path.join(filePath, 'index.html');
-  }
+app.use(cors({
+    origin: true,
+    credentials: true
+}));
 
-  const extname = path.extname(filePath).toLowerCase();
-  const contentType = MIME_TYPES[extname] || 'application/octet-stream';
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 
-  fs.readFile(filePath, (err, content) => {
-    if (err) {
-      if (err.code === 'ENOENT') {
-        res.writeHead(404, { 'Content-Type': 'text/html' });
-        res.end('<h1>404 - Archivo no encontrado</h1>');
-      } else {
-        res.writeHead(500);
-        res.end(`Error del servidor: ${err.code}`);
-      }
-    } else {
-      res.writeHead(200, { 'Content-Type': contentType });
-      res.end(content, 'utf-8');
+app.use(session({
+    secret: process.env.SESSION_SECRET || 'dev-secret-cambiar-en-produccion',
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+        secure: false,
+        httpOnly: true,
+        maxAge: 24 * 60 * 60 * 1000
     }
-  });
+}));
+
+// ============================================
+// ARCHIVOS ESTÁTICOS
+// ============================================
+
+app.use('/frontend', express.static(path.join(__dirname, 'frontend')));
+app.use('/admin', express.static(path.join(__dirname, 'admin')));
+
+app.get('/', (req, res) => {
+    res.redirect('/frontend/index.html');
 });
 
-server.listen(PORT, () => {
-  console.log(`Servidor corriendo en http://localhost:${PORT}`);
-  console.log('Presiona Ctrl+C para detener');
+// ============================================
+// RUTAS API
+// ============================================
+
+app.use('/backend/api', routes);
+
+// ============================================
+// MANEJO DE ERRORES
+// ============================================
+
+app.use((err, req, res, next) => {
+    console.error('Error:', err);
+    res.status(500).json({
+        success: false,
+        message: err.message || 'Error interno del servidor'
+    });
+});
+
+// ============================================
+// INICIAR SERVIDOR
+// ============================================
+
+app.listen(PORT, () => {
+    console.log(`\n🌿 Sanación Consciente ASA - Servidor corriendo`);
+    console.log(`   URL: http://localhost:${PORT}`);
+    console.log(`   Frontend: http://localhost:${PORT}/frontend/index.html`);
+    console.log(`   Admin: http://localhost:${PORT}/admin/login.html`);
+    console.log(`   API: http://localhost:${PORT}/backend/api\n`);
 });

@@ -15,17 +15,17 @@ const EmailTester = {
     templates: {
         newReservation: (data) => {
             const serviceNames = {
-                'relajante': 'Masaje Relajante',
-                'terapeutico': 'Masaje Terapéutico',
-                'aromaterapia': 'Aromaterapia',
-                'piedras': 'Piedras Calientes',
-                'reflexologia': 'Reflexología Podal',
-                'prenatal': 'Masaje Prenatal'
+                'relajante-espalda': 'Masaje Relajante (Espalda) — 45 min · $20.000',
+                'relajante-completo': 'Masaje Relajante (Cuerpo Completo) — 60 min · $30.000',
+                'piedras-espalda': 'Relajación + Piedras Calientes (Espalda) — 45 min · $30.000',
+                'piedras-completo': 'Relajación + Piedras Calientes (Cuerpo Completo) — 60 min · $35.000',
+                'aromaterapia-espalda': 'Aromaterapia (Espalda) — 30 min · $25.000',
+                'aromaterapia-completo': 'Aromaterapia (Cuerpo Completo) — 45 min · $30.000'
             };
 
             return {
                 to: data.email,
-                subject: '✨ Hemos recibido tu reserva - Sanación Consciente',
+                subject: '✨ Hemos recibido tu reserva - Sanación Consciente ASA',
                 html: `
                 <!DOCTYPE html>
                 <html>
@@ -33,20 +33,20 @@ const EmailTester = {
                     <style>
                         body { font-family: Arial, sans-serif; background: #f5f5f5; margin: 0; padding: 20px; }
                         .container { max-width: 600px; margin: 0 auto; background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-                        .header { background: linear-gradient(135deg, #2d5a4a, #1a3d32); color: white; padding: 40px; text-align: center; }
+                        .header { background: linear-gradient(135deg, #4CAF7A, #2E7D52); color: white; padding: 40px; text-align: center; }
                         .header h1 { margin: 0; }
                         .content { padding: 30px; }
-                        .detail-box { background: #faf7f2; padding: 20px; border-radius: 8px; margin: 20px 0; }
+                        .detail-box { background: #F5FCF6; padding: 20px; border-radius: 8px; margin: 20px 0; }
                         .detail-row { margin: 10px 0; }
-                        .detail-label { font-weight: bold; color: #2d5a4a; }
-                        .cta-button { background: #c9a96e; color: #2c3e50; padding: 15px 30px; text-decoration: none; border-radius: 25px; display: inline-block; margin: 10px 0; font-weight: bold; }
+                        .detail-label { font-weight: bold; color: #4CAF7A; }
+                        .cta-button { background: #ADEBB3; color: #2c3e50; padding: 15px 30px; text-decoration: none; border-radius: 25px; display: inline-block; margin: 10px 0; font-weight: bold; }
                         .footer { background: #f0f0f0; padding: 20px; text-align: center; font-size: 0.9em; color: #666; }
                     </style>
                 </head>
                 <body>
                     <div class="container">
                         <div class="header">
-                            <h1>🌿 Sanación Consciente</h1>
+                            <h1>🌿 Sanación Consciente ASA</h1>
                             <p>¡Gracias por tu reserva!</p>
                         </div>
                         <div class="content">
@@ -72,9 +72,9 @@ const EmailTester = {
                             </p>
                         </div>
                         <div class="footer">
-                            <p>📍 Av. Providencia 1234, Santiago<br>
+                            <p>📍 Detrás del Mall Quilín, Peñalolén<br>
                             📞 +56 9 1234 5678<br>
-                            ✉️ reservas@sanacionconsciente.cl</p>
+                            ✉️ masajesanacionasa@gmail.com</p>
                         </div>
                     </div>
                 </body>
@@ -86,23 +86,23 @@ const EmailTester = {
 
         adminNotification: (data) => {
             const serviceNames = {
-                'relajante': 'Masaje Relajante',
-                'terapeutico': 'Masaje Terapéutico',
-                'aromaterapia': 'Aromaterapia',
-                'piedras': 'Piedras Calientes',
-                'reflexologia': 'Reflexología Podal',
-                'prenatal': 'Masaje Prenatal'
+                'relajante-espalda': 'Masaje Relajante (Espalda) — 45 min · $20.000',
+                'relajante-completo': 'Masaje Relajante (Cuerpo Completo) — 60 min · $30.000',
+                'piedras-espalda': 'Relajación + Piedras Calientes (Espalda) — 45 min · $30.000',
+                'piedras-completo': 'Relajación + Piedras Calientes (Cuerpo Completo) — 60 min · $35.000',
+                'aromaterapia-espalda': 'Aromaterapia (Espalda) — 30 min · $25.000',
+                'aromaterapia-completo': 'Aromaterapia (Cuerpo Completo) — 45 min · $30.000'
             };
 
             return {
-                to: 'ccarrillo29@gmail.com (Admin)',
-                subject: '🔔 Nueva reserva recibida - Sanación Consciente',
+                to: 'masajesanacionasa@gmail.com (Admin)',
+                subject: '🔔 Nueva reserva recibida - Sanación Consciente ASA',
                 html: `
                 <!DOCTYPE html>
                 <html>
                 <body style="font-family: Arial, sans-serif; background: #f5f5f5; margin: 0; padding: 20px;">
                     <div style="max-width: 600px; margin: 0 auto; background: white; border-radius: 10px; overflow: hidden; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-                        <div style="background: #2d5a4a; color: white; padding: 30px; text-align: center;">
+                        <div style="background: #4CAF7A; color: white; padding: 30px; text-align: center;">
                             <h2>🌿 Nueva Reserva Recibida</h2>
                         </div>
                         <div style="padding: 30px;">
@@ -226,7 +226,7 @@ const EmailTester = {
 
         console.log('📧 Emails simulados enviados:');
         console.log('   1. Confirmación al cliente:', formData.email);
-        console.log('   2. Notificación al admin: ccarrillo29@gmail.com');
+        console.log('   2. Notificación al admin: masajesanacionasa@gmail.com');
 
         return {
             success: true,
