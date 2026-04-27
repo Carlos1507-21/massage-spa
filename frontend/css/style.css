@@ -498,6 +498,14 @@ section {
     order: -1;
 }
 
+.about-img {
+    width: 100%;
+    max-width: 500px;
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    object-fit: cover;
+}
+
 .about-text .section-title {
     text-align: left;
     margin-bottom: 25px;
