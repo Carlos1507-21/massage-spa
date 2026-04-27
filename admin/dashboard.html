@@ -453,6 +453,87 @@
     <!-- Notification container -->
     <div id="notification" class="notification"></div>
 
+    <script>
+    // ============================================
+    // DIAGNOSTICO TEMPORAL - Detectar overlay bloqueante
+    // ============================================
+    (function() {
+        function runDiagnostic() {
+            var body = document.body;
+            var html = document.documentElement;
+            var viewportW = window.innerWidth;
+            var viewportH = window.innerHeight;
+            var suspects = [];
+            var all = document.querySelectorAll('*');
+            for (var i = 0; i < all.length; i++) {
+                var el = all[i];
+                var style = window.getComputedStyle(el);
+                var pos = style.position;
+                if (pos === 'fixed' || pos === 'absolute' || pos === 'sticky') {
+                    var rect = el.getBoundingClientRect();
+                    var area = rect.width * rect.height;
+                    var viewportArea = viewportW * viewportH;
+                    var coverage = area / viewportArea;
+                    var hasOpacity = parseFloat(style.opacity) < 1;
+                    var bg = style.backgroundColor;
+                    var hasBg = bg && bg !== 'rgba(0, 0, 0, 0)' && bg !== 'transparent';
+                    var zIndex = parseInt(style.zIndex) || 0;
+                    if (coverage > 0.3 && zIndex > 0) {
+                        suspects.push({
+                            tag: el.tagName,
+                            id: el.id || '(sin id)',
+                            className: el.className || '(sin clase)',
+                            position: pos,
+                            width: Math.round(rect.width),
+                            height: Math.round(rect.height),
+                            top: Math.round(rect.top),
+                            left: Math.round(rect.left),
+                            coverage: (coverage * 100).toFixed(1) + '%',
+                            zIndex: zIndex,
+                            opacity: style.opacity,
+                            background: bg,
+                            display: style.display,
+                            visibility: style.visibility,
+                            pointerEvents: style.pointerEvents
+                        });
+                    }
+                }
+            }
+            var panel = document.createElement('div');
+            panel.id = 'diagnostic-panel';
+            panel.style.cssText = 'position:fixed;bottom:10px;right:10px;width:400px;max-height:80vh;overflow-y:auto;background:#fff;border:2px solid #e74c3c;border-radius:8px;padding:15px;z-index:99999;font-family:monospace;font-size:12px;box-shadow:0 10px 30px rgba(0,0,0,0.3);';
+            var htmlContent = '<h3 style="margin:0 0 10px;color:#e74c3c;font-size:14px;">Diagnostico de Overlay</h3>';
+            htmlContent += '<p>Viewport: ' + viewportW + 'x' + viewportH + '</p>';
+            if (suspects.length === 0) {
+                htmlContent += '<p style="color:#27ae60;">No se encontraron elementos sospechosos.</p>';
+            } else {
+                htmlContent += '<p style="color:#e74c3c;">' + suspects.length + ' elemento(s) sospechoso(s):</p>';
+                suspects.forEach(function(s, idx) {
+                    htmlContent += '<div style="margin:8px 0;padding:8px;background:#f5f5f5;border-radius:4px;">';
+                    htmlContent += '<strong>#' + (idx+1) + ' ' + s.tag + '</strong><br>';
+                    htmlContent += 'ID: ' + s.id + '<br>';
+                    htmlContent += 'Clase: ' + s.className.substring(0, 40) + '<br>';
+                    htmlContent += 'Pos: ' + s.position + ' | Z: ' + s.zIndex + '<br>';
+                    htmlContent += 'Size: ' + s.width + 'x' + s.height + ' @ (' + s.left + ',' + s.top + ')<br>';
+                    htmlContent += 'Cobertura: ' + s.coverage + '<br>';
+                    htmlContent += 'Display: ' + s.display + ' | Vis: ' + s.visibility + '<br>';
+                    htmlContent += 'Opacity: ' + s.opacity + ' | PointerEvents: ' + s.pointerEvents + '<br>';
+                    htmlContent += 'BG: ' + s.background + '<br>';
+                    htmlContent += '</div>';
+                });
+            }
+            htmlContent += '<button onclick="this.parentElement.remove()" style="margin-top:10px;padding:6px 12px;background:#e74c3c;color:#fff;border:none;border-radius:4px;cursor:pointer;">Cerrar diagnostico</button>';
+            panel.innerHTML = htmlContent;
+            document.body.appendChild(panel);
+        }
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', runDiagnostic);
+        } else {
+            runDiagnostic();
+        }
+    })();
+    </script>
+
     <script src="js/admin.js"></script>
 </body>
 </html>
