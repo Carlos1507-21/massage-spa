@@ -146,7 +146,7 @@
     }
 
     .promo-image {
-        font-size: 4rem;
+        object-fit: cover;
     }
 
     .promo-badge {
