@@ -495,18 +495,13 @@ section {
     justify-content: center;
 }
 
-.image-placeholder {
+.benefits-img {
     width: 100%;
     max-width: 500px;
     aspect-ratio: 1;
-    background: linear-gradient(135deg, var(--bg-cream), #d4f0d9);
+    object-fit: cover;
     border-radius: var(--radius);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--text-muted);
-    font-size: 1.2rem;
-    box-shadow: var(--shadow);
+    box-shadow: var(--shadow-hover);
 }
 
 /* About */
@@ -680,6 +675,18 @@ section {
 .contact-item p {
     color: var(--text-light);
     font-size: 0.95rem;
+}
+
+.contact-item p a.email-link {
+    color: var(--primary-color);
+    text-decoration: none;
+    font-weight: 600;
+    transition: var(--transition);
+}
+
+.contact-item p a.email-link:hover {
+    color: var(--primary-dark);
+    text-decoration: underline;
 }
 
 /* Form */
