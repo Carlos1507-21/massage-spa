@@ -314,8 +314,9 @@ section {
 }
 
 .service-icon {
-    font-size: 3.5rem;
+    font-size: 3rem;
     margin-bottom: 20px;
+    color: var(--primary-color);
 }
 
 .service-card h3 {
@@ -383,8 +384,9 @@ section {
 }
 
 .aroma-icon {
-    font-size: 3rem;
+    font-size: 2.5rem;
     margin-bottom: 15px;
+    color: var(--primary-color);
 }
 
 .aroma-card h3 {
@@ -861,7 +863,8 @@ section {
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 6rem;
+    font-size: 4rem;
+    color: var(--white);
     box-shadow: 0 20px 60px rgba(173, 235, 179, 0.3);
     animation: pulse-glow 3s infinite;
 }
