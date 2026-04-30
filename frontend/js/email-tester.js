@@ -68,12 +68,12 @@ const EmailTester = {
                             </div>
 
                             <p style="text-align: center;">
-                                <a href="https://wa.me/56912345678?text=Hola%20Sanaci%C3%B3n%20Consciente%2C%20soy%20${encodeURIComponent(data.name)}" class="cta-button">📱 Contactar por WhatsApp</a>
+                                <a href="https://wa.me/56989908321?text=Hola%20Sanaci%C3%B3n%20Consciente%2C%20soy%20${encodeURIComponent(data.name)}" class="cta-button">📱 Contactar por WhatsApp</a>
                             </p>
                         </div>
                         <div class="footer">
                             <p>📍 Detrás del Mall Quilín, Peñalolén<br>
-                            📞 +56 9 1234 5678<br>
+                            📞 +56 9 8990 8321<br>
                             ✉️ masajesanacionasa@gmail.com</p>
                         </div>
                     </div>

@@ -16,10 +16,23 @@ router.post('/login', async (req, res) => {
         return jsonResponse(res, false, 'Usuario y contraseña son requeridos', null, 400);
     }
 
+    // Guardar datos para regenerar sesión tras login exitoso
+    const originalSession = req.session;
+
     const success = await login(req, username, password);
 
     if (success) {
-        return jsonResponse(res, true, 'Login exitoso');
+        // Regenerar session ID para prevenir session fixation
+        req.session.regenerate((err) => {
+            if (err) {
+                console.error('Session regenerate error:', err);
+                return jsonResponse(res, false, 'Error al iniciar sesión', null, 500);
+            }
+            req.session.adminLoggedIn = true;
+            req.session.adminUsername = username;
+            req.session.loginTime = Date.now();
+            return jsonResponse(res, true, 'Login exitoso');
+        });
     } else {
         return jsonResponse(res, false, 'Credenciales incorrectas', null, 401);
     }
@@ -39,7 +52,7 @@ router.post('/logout', async (req, res) => {
 router.get('/check', (req, res) => {
     if (checkAuth(req)) {
         return jsonResponse(res, true, 'Autenticado', {
-            username: req.session.adminUsername || 'admin',
+            username: req.session.adminUsername || 'Mabel',
             login_time: req.session.loginTime || null
         });
     } else {

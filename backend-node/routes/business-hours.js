@@ -15,10 +15,14 @@ const { requireAuth, jsonResponse } = require('../middleware/auth');
  */
 router.get('/', async (req, res) => {
     try {
+        // Validador de fecha
+        const isValidDate = (d) => /^\d{4}-\d{2}-\d{2}$/.test(d) && !isNaN(new Date(d).getTime());
+        const isValidTime = (t) => /^\d{2}:\d{2}$/.test(t);
+
         // Check de disponibilidad para el frontend público
         if (req.query.check !== undefined) {
-            const date = req.query.date || new Date().toISOString().split('T')[0];
-            const time = req.query.time || new Date().toTimeString().slice(0, 5);
+            const date = isValidDate(req.query.date) ? req.query.date : new Date().toISOString().split('T')[0];
+            const time = isValidTime(req.query.time) ? req.query.time : new Date().toTimeString().slice(0, 5);
 
             const isOpen = await BusinessHours.isOpenAt(date, time);
             return jsonResponse(res, true, 'Disponibilidad verificada', {
@@ -30,8 +34,8 @@ router.get('/', async (req, res) => {
 
         // Obtener slots disponibles
         if (req.query.slots !== undefined) {
-            const date = req.query.date || new Date().toISOString().split('T')[0];
-            const duration = parseInt(req.query.duration) || 60;
+            const date = isValidDate(req.query.date) ? req.query.date : new Date().toISOString().split('T')[0];
+            const duration = /^\d+$/.test(req.query.duration) ? parseInt(req.query.duration) : 60;
 
             const slots = await BusinessHours.getAvailableSlots(date, duration);
             return jsonResponse(res, true, 'Slots obtenidos', {
@@ -42,10 +46,9 @@ router.get('/', async (req, res) => {
 
         // Obtener días festivos
         if (req.query.special_days !== undefined) {
-            const days = await BusinessHours.getSpecialDays(
-                req.query.start || null,
-                req.query.end || null
-            );
+            const start = isValidDate(req.query.start) ? req.query.start : null;
+            const end = isValidDate(req.query.end) ? req.query.end : null;
+            const days = await BusinessHours.getSpecialDays(start, end);
             return jsonResponse(res, true, 'Días festivos obtenidos', {
                 specialDays: days
             });

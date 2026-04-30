@@ -1,9 +1,9 @@
 # 🌿 Sanación Consciente ASA - Registro de Avances del Proyecto
 
-**Fecha última actualización:** 2026-04-26
+**Fecha última actualización:** 2026-04-29
 **Estado:** Simplificado para negocio personal (una sola terapeuta a domicilio)
 **Migración:** PHP → Node.js/Express + PostgreSQL ✅ COMPLETADA
-**Próxima sesión:** Google Calendar, mejoras de UI, deploy
+**Próxima sesión:** Deploy a producción
 
 ---
 
@@ -34,6 +34,8 @@ massage-spa/
 │   ├── 📂 middleware/     → Autenticación
 │   │   └── auth.js
 │   └── 📂 services/       → Servicios externos (email, calendar)
+│       ├── email.js
+│       └── googleCalendar.js
 ├── 📂 admin/              # ⭐ PANEL DE ADMIN
 │   ├── login.html
 │   ├── dashboard.html
@@ -44,7 +46,7 @@ massage-spa/
 
 ---
 
-## 🔥 MIGRACIÓN PHP → NODE.JS (EN PROGRESO)
+## 🔥 MIGRACIÓN PHP → NODE.JS (COMPLETADA)
 
 ### Estado de la migración
 
@@ -59,22 +61,9 @@ massage-spa/
 | Modelo BusinessHours | ✅ Listo | `backend-node/models/businessHours.js` |
 | Script init DB PostgreSQL | ✅ Listo | `backend-node/config/init-db.js` |
 | Servicio Email (nodemailer) | ✅ Listo | `backend-node/services/email.js` |
-| Servicio Google Calendar | 🚧 Pendiente | `backend-node/services/googleCalendar.js` |
+| Servicio Google Calendar | 🚧 Pendiente credenciales | `backend-node/services/googleCalendar.js` |
 | Ajustar URLs frontend | ✅ Listo | `frontend/js/main.js`, `admin/js/admin.js` |
 | Tests de endpoints | ✅ Listo | Verificado con curl |
-
-### Diferencias clave PHP → Node.js
-
-| Aspecto | PHP (Legacy) | Node.js (Nuevo) |
-|---------|--------------|-------------------|
-| Servidor | Apache + PHP | Express.js |
-| Base de datos | MySQL | PostgreSQL |
-| Conexión BD | PDO | `pg` (node-postgres) Pool |
-| Auth | Sesiones PHP + bcrypt | `express-session` + bcryptjs |
-| Email | PHPMailer | nodemailer |
-| Respuestas | `echo json_encode()` | `res.json()` |
-| URLs | `auth.php?action=login` | `/auth/login` |
-| CORS | Headers manuales | Middleware `cors` |
 
 ---
 
@@ -87,18 +76,13 @@ massage-spa/
 **Página principal (`frontend/index.html`):**
 - ✅ Header fijo con navegación suave
 - ✅ Hero section con gradiente verde (#2d5a4a → #1a3d32)
-- ✅ Sección de 6 servicios de masajes:
-  - Masaje Relajante ($45.000)
-  - Masaje Terapéutico POPULAR ($55.000)
-  - Aromaterapia ($50.000)
-  - Piedras Calientes ($60.000)
-  - Reflexología Podal ($35.000)
-  - Masaje Prenatal ($50.000)
+- ✅ Sección de 6 servicios de masajes con precios en CLP
 - ✅ Beneficios del masaje regular (4 items con iconos)
-- ✅ Sección "Nosotros" con estadísticas (6+ años, 5000+ clientes, 8 terapeutas)
+- ✅ Sección "Sobre Mí" (negocio personal)
 - ✅ Testimonios (3 tarjetas)
-- ✅ Formulario de reservas (nombre, email, teléfono, servicio, fecha, hora, mensaje)
+- ✅ Formulario de reservas con horas dinámicas según disponibilidad
 - ✅ Footer con redes sociales
+- ✅ Botón flotante de WhatsApp
 
 **CSS (`frontend/css/`):**
 - ✅ `style.css` - Estilos completos (~550 líneas)
@@ -118,35 +102,41 @@ massage-spa/
 - ✅ Notificaciones toast (éxito/error)
 - ✅ Intersection Observer para animaciones
 - ✅ Configuración de fecha mínima (mañana)
+- ✅ **Horas dinámicas:** al seleccionar fecha y servicio, consulta API y muestra solo horarios disponibles
 
-### 3. Backend API (PHP)
+### 3. Backend API (Node.js/Express)
 
-**Configuración (`backend/config/database.php`):**
-- ✅ Conexión PDO con opciones de seguridad
+**Configuración (`backend-node/config/database.js`):**
+- ✅ Conexión Pool PostgreSQL con opciones de seguridad
 - ✅ Función `initDatabase()` para crear tablas:
-  - `reservations`: id, name, email, phone, service, reservation_date, reservation_time, message, status, timestamps
+  - `reservations`: id, name, email, phone, service, service_duration, reservation_date, reservation_time, message, status, timestamps
   - `contact_messages`: para futuro formulario de contacto
+  - `business_hours`: horarios semanales con `service_duration` y `slot_duration`
+  - `special_days`: días festivos / horarios especiales
+  - `google_calendar_tokens`: tokens OAuth
 
-**Modelo (`backend/models/Reservation.php`):**
+**Modelo (`backend-node/models/Reservation.php`):**
 - ✅ Clase con métodos:
-  - `create()` - Crear reserva
+  - `create()` - Crear reserva incluyendo `service_duration`
   - `getAll()` - Listar todas (con filtro opcional por status)
   - `getById()` - Obtener una
   - `updateStatus()` - Cambiar estado (pending/confirmed/cancelled)
   - `delete()` - Eliminar
-  - `checkAvailability()` - Verificar si hora está libre
+  - `checkAvailability()` - Verificar disponibilidad considerando solapamiento de intervalos (duración + 30 min de preparación)
 
-**API REST (`backend/api/reservations.php`):**
+**API REST (`backend-node/routes/reservations.js`):**
 - ✅ Endpoints funcionales:
   - GET - Listar / Obtener una
-  - POST - Crear nueva
+  - POST - Crear nueva (con validación y verificación de disponibilidad por intervalos)
   - PUT - Actualizar estado
   - DELETE - Eliminar
-- ✅ Headers CORS configurados
+- ✅ CORS configurado
 - ✅ Validación de datos
 - ✅ Respuestas JSON consistentes
+- ✅ Mapeo de duraciones de servicios (`SERVICE_DURATIONS`)
+- ✅ Integración con Google Calendar al confirmar/cancelar
 
-### 4. PANEL DE ADMINISTRACIÓN COMPLETO (NUEVO - Abril 2025)
+### 4. PANEL DE ADMINISTRACIÓN COMPLETO
 
 **Estructura (`admin/`):**
 - ✅ `login.html` - Página de login con diseño spa
@@ -155,13 +145,12 @@ massage-spa/
 - ✅ `js/admin.js` - Lógica completa del panel
 
 **Backend auth actualizado:**
-- ✅ `backend/middleware/Auth.php` - Clase de autenticación con bcrypt
-- ✅ `backend/api/auth.php` - Endpoints login/logout/check
+- ✅ `backend-node/middleware/auth.js` - Clase de autenticación con bcrypt
+- ✅ Usuario admin: `Mabel` / `204Mabel.3` (hash bcrypt)
+- ✅ `backend-node/routes/auth.js` - Endpoints login/logout/check
 
 **Características del panel:**
 - 🔐 **Login seguro:**
-  - Usuario: `admin`
-  - Contraseña: `password` (en producción usar hash bcrypt)
   - Toggle mostrar/ocultar contraseña
   - Estado "Recordarme"
 
@@ -213,221 +202,152 @@ massage-spa/
 
 ---
 
-## 🔧 Cómo probarlo
+## 🔧 HORARIOS DE ATENCIÓN ACTUALIZADOS (Abril 2026)
 
-### Opción A: Solo Frontend (sin servidor)
-1. Abrir `frontend/index.html` directamente en navegador
-2. Ver diseño, navegación, animaciones
-3. El formulario muestra notificación toast pero no guarda en BD (normal)
+**Configuración actual:**
+| Día | Estado | Horario | Notas |
+|-----|--------|---------|-------|
+| Lunes | ✅ Abierto | 20:00 - 21:00 | Un solo slot de 1 hora |
+| Martes | ✅ Abierto | 20:00 - 21:00 | Un solo slot de 1 hora |
+| Miércoles | ✅ Abierto | 20:00 - 21:00 | Un solo slot de 1 hora |
+| Jueves | ✅ Abierto | 20:00 - 21:00 | Un solo slot de 1 hora |
+| Viernes | ✅ Abierto | 20:00 - 21:00 | Un solo slot de 1 hora |
+| Sábado | ❌ Cerrado | — | Sin sesiones |
+| Domingo | ✅ Abierto | 08:00 - 18:00 | Slots cada 60 min |
 
-### Opción B: Panel de Administración (sin servidor backend)
-1. Abrir `admin/login.html` directamente en navegador
-2. Ingresar: usuario `admin`, contraseña `password`
-3. Ver dashboard con datos de demostración
-4. Navegar entre secciones, ver tabla de reservas
-5. Los cambios son simulados (no persisten sin BD)
+**Base de datos (`backend-node/config/init-db.js`):**
+- Tabla `business_hours` actualizada con nuevos horarios
+- Seed data por defecto refleja horarios reales del negocio
+- Admin panel demo data (`admin/js/admin.js`) también actualizado
 
-### Opción C: Con servidor local (completo)
-1. Instalar XAMPP/WAMP/MAMP
-2. Copiar proyecto a `htdocs/`
-3. Crear BD `sanacion_consciente` en MySQL
-4. Ejecutar `initDatabase()` para crear tablas
-5. Acceder a:
-   - Sitio web: `http://localhost/massage-spa/frontend/`
-   - Panel admin: `http://localhost/massage-spa/admin/login.html`
-
-### Opción D: Probar Google Calendar (requiere servidor)
-1. Seguir pasos de Opción C
-2. Ir a Google Cloud Console y crear credenciales OAuth 2.0
-3. Editar `backend/config/google-calendar.php` y pegar Client ID y Client Secret
-4. Asegurar que el URI de redirección esté configurado en Google Cloud Console
-5. Ir al panel admin → Integraciones → Conectar con Google
-6. Autorizar la aplicación con tu cuenta de Google
-7. Crear o confirmar una reserva: se sincronizará automáticamente con el calendario
+**Frontend (`frontend/index.html`):**
+- Sección de contacto muestra horarios actualizados:
+  - Lun - Vie: 20:00 - 21:00
+  - Sáb: Sin sesiones
+  - Dom: 08:00 - 18:00
 
 ---
 
-## 📋 Decisiones técnicas tomadas
+## 📞 CONTACTO ACTUALIZADO
 
-**Diseño:**
-- Paleta verde/dorado para transmitir tranquilidad y lujo
-- Tipografía: Playfair Display (títulos) + Open Sans (cuerpo)
-- Mobile-first con breakpoints estándar
-- Sin frameworks CSS (vanilla) para control total
+**Teléfono/WhatsApp:** +56 9 8990 8321
 
-**Backend:**
-- PHP puro con PDO (no frameworks) - simple y portable
-- MySQL como base de datos
-- API RESTful con endpoints claros
-- Prepared statements contra SQL Injection
-- Autenticación con sesiones PHP + bcrypt
+**Archivos actualizados:**
+- `frontend/index.html` (contacto + WhatsApp float)
+- `frontend/js/email-tester.js` (plantillas de email)
+- `admin/js/admin.js` (demo data)
+- `.env.example`
+- `README.md`
+- Backend legacy PHP (`backend/config/database.php`, `backend/models/WhatsApp.php`)
 
-**Frontend-Backend:**
-- El formulario apunta a `../backend/api/reservations.php`
-- JavaScript hace fetch POST con JSON
-- Si no hay servidor, funciona en modo demo con datos de ejemplo
+---
 
-**Panel de administración:**
-- Separado del frontend principal (carpeta `admin/`)
-- Mismo tema visual para consistencia de marca
-- Protección por sesión (redirige a login si no está autenticado)
-- Datos de demostración cuando no hay conexión a BD
+## 🎁 PROMOCIÓN DÍA DE LA MADRE (SIMPLIFICADA)
 
-### 5. Integración con Google Calendar (NUEVO - Abril 2026)
+- ❌ Eliminado badge `-15%`
+- ❌ Eliminado texto de "15% de descuento"
+- ✅ Precio fijo: **$20.000 CLP**
+- ✅ CTA actualizado a "Agendar ahora"
 
-**Backend (`backend/services/GoogleCalendarService.php`):**
-- Clase completa con OAuth 2.0 implementado con cURL (sin Composer)
-- Almacenamiento seguro de tokens en BD (`google_calendar_tokens`)
-- Auto-refresco de access_token usando refresh_token
-- Crear, actualizar y eliminar eventos en Google Calendar
-- Sincronización automática al confirmar/cancelar reservas
+Archivo: `frontend/index.html` (sección `.promociones`)
 
-**Configuración (`backend/config/google-calendar.php`):**
-- Placeholders claros para `GOOGLE_CLIENT_ID` y `GOOGLE_CLIENT_SECRET`
-- Instrucciones paso a paso para obtener credenciales en Google Cloud Console
-- URI de redirección calculada automáticamente
-- Scope: `calendar.events` (crear/editar eventos)
+---
 
-**API (`backend/api/google-calendar.php`):**
-- Endpoints:
-  - `status` → verificar estado de conexión
-  - `auth-url` → generar URL de autorización OAuth
-  - `callback` → recibir token de Google
-  - `disconnect` → desconectar cuenta
-  - `sync` → sincronizar reserva específica
-  - `sync-all` → sincronizar todas las reservas pendientes
+## ⏱️ BLOQUEO DE HORARIOS: DURACIÓN + PREPARACIÓN
 
-**Panel de admin (`admin/dashboard.html` + `admin/js/admin.js`):**
-- Nueva sección "Integraciones" en sidebar
-- Tarjeta de Google Calendar con estado visual
-- Botón "Conectar con Google" (abre OAuth)
-- Botón "Desconectar"
-- Botón "Sincronizar todas las reservas"
-- Panel de instrucciones paso a paso cuando no está configurado
-- Estados visuales: Sin configurar / Configurado sin conectar / Conectado
+**Regla de negocio implementada:**
+- El cliente ve la duración real del servicio (30, 45 o 60 min)
+- En el calendario/backend, cada reserva bloquea: **duración + 30 min adicionales** (tiempo de preparación de sala)
 
-**Sincronización automática:**
-- Al crear una reserva → se intenta crear evento en Google Calendar
-- Al confirmar una reserva → evento pasa a verde en Google Calendar
-- Al cancelar una reserva → evento se elimina del calendario
-- Duración del evento según tipo de servicio (45-90 min)
-- Recordatorios automáticos: email 24h antes + popup 1h antes
-- Color del evento según estado: amarillo (pendiente), verde (confirmado), rojo (cancelado)
+**Servicios y bloqueo total:**
+| Servicio | Duración visible | Bloqueo total (con prep) |
+|----------|-----------------|--------------------------|
+| Aromaterapia (Espalda) | 30 min | 60 min |
+| Masaje Relajante (Espalda) | 45 min | 75 min |
+| Aromaterapia (Cuerpo Completo) | 45 min | 75 min |
+| Piedras Calientes (Espalda) | 45 min | 75 min |
+| Masaje Relajante (Cuerpo Completo) | 60 min | 90 min |
+| Piedras Calientes (Cuerpo Completo) | 60 min | 90 min |
 
-### 6. Módulo de Horarios de Atención (NUEVO - Abril 2026)
+**Implementación técnica:**
+- `reservations` tabla incluye columna `service_duration` (minutos visibles)
+- `businessHours.js`:
+  - `getAvailableSlots()` filtra slots donde `serviceDuration + 30` cabe dentro del horario
+  - `checkSlotAvailability()` verifica solapamiento de intervalos con PostgreSQL
+- `reservation.js`:
+  - `checkAvailability()` consulta SQL con solapamiento de intervalos usando `COALESCE(service_duration, 60)`
+- `reservations.js` (ruta):
+  - Mapeo `SERVICE_DURATIONS` para derivar duración desde el value del formulario
+  - Pasa `service_duration` al crear reserva
+- `main.js` (frontend):
+  - Envía duración del servicio al consultar slots disponibles (`/backend/api/business-hours?slots=1&date=...&duration=...`)
+  - Fallback según día de la semana si la API no responde
 
-**Backend (`backend/models/BusinessHours.php`):**
-- Modelo completo para gestión de horarios
-- Métodos: `getAll()`, `getByDay()`, `isOpenAt()`, `getAvailableSlots()`, `update()`
-- Soporte para días festivos y horarios especiales
-- Verificación de disponibilidad de slots
+---
 
-**API (`backend/api/business-hours.php`):**
-- Endpoints REST para CRUD de horarios:
-  - GET - Listar horarios semanales / Verificar disponibilidad / Obtener slots
-  - PUT - Actualizar horario semanal
-  - POST - Guardar día festivo
-  - DELETE - Eliminar día festivo
-- Autenticación requerida para operaciones de escritura
+## 🔐 SEGURIDAD REFORZADA (Pre-Deploy)
 
-**Base de datos (`backend/config/database.php`):**
-- Tabla `business_hours`: Horarios semanales (Lunes a Domingo)
-  - Campos: day_of_week, is_open, open_time, close_time, break_start, break_end, slot_duration, max_bookings_per_slot
-- Tabla `special_days`: Días festivos / horarios especiales
-  - Campos: date, name, is_open, open_time, close_time, break_start, break_end, notes
-- Datos por defecto: Lunes a Viernes 9:00-19:00 (descanso 14:00-15:00), Sábado 10:00-16:00, Domingo cerrado
+**Servidor (`server.js`):**
+- ✅ `helmet` - Headers de seguridad (CSP, HSTS, X-Frame-Options, etc.)
+- ✅ `express-rate-limit` - Rate limiting general (100 req / 15 min)
+- ✅ Rate limiting específico para login (10 intentos / 15 min)
+- ✅ Session config mejorada:
+  - `secure: true` en producción
+  - `httpOnly: true`
+  - `sameSite: 'strict'`
+  - `name: 'sessionId'` (no default `connect.sid`)
+- ✅ Body parser limitado a 10kb (protección contra payloads enormes)
+- ✅ `trust proxy` en producción
 
-**Panel Admin (`admin/dashboard.html` + `admin/js/admin.js` + `admin/css/admin.css`):**
-- Nueva sección "Horarios" en sidebar
-- Tarjetas editables para cada día de la semana
-- Toggle "Día de atención" para cerrar días específicos
-- Configuración de:
-  - Hora de apertura y cierre
-  - Hora de descanso (inicio y fin)
-  - Duración de slots (15-180 minutos)
-- Gestión de días festivos:
-  - Tabla con lista de días festivos
-  - Modal para agregar/editar
-  - Opción de cerrar el spa o abrir con horario especial
-  - Notas adicionales por día
+**Autenticación (`backend-node/middleware/auth.js`):**
+- ✅ Usuario cambiado: `Mabel` / `204Mabel.3`
+- ✅ Hash bcrypt actualizado
+- ✅ Session destroy en logout
+- ✅ **Session regeneration** tras login exitoso (previene session fixation)
 
-**Características:**
-- Validación de horarios coherentes
-- Soporte para múltiples reservas por slot (configurable)
-- Integración futura con formulario de reservas (validar disponibilidad)
-- Integración futura con Google Calendar (respetar horarios)
+**Validación de entrada (`backend-node/routes/reservations.js`):**
+- ✅ Sanitización básica de strings (`<`, `>` removidos)
+- ✅ Validación de email con regex
+- ✅ Validación de teléfono (formato chileno)
+- ✅ Validación de fecha (formato YYYY-MM-DD y no pasada)
+- ✅ Validación de servicio contra whitelist (`SERVICE_DURATIONS`)
+- ✅ Validación de `id` como entero positivo en GET/PUT/DELETE
+- ✅ Longitud máxima en campos (nombre 100, mensaje 500)
 
-### 7. Módulo de Gestión de Terapeutas (NUEVO - Abril 2026) → REMOVIDO
+**Validación de entrada (`backend-node/routes/business-hours.js`):**
+- ✅ Validación de fecha y hora en query params
+- ✅ Validación de `duration` como entero positivo
 
-**Nota:** Este módulo fue implementado por los compañeros pero luego se decidió removerlo ya que el negocio es personal: una sola terapeuta que atiende en su casa.
+**Frontend (`frontend/js/main.js`):**
+- ✅ **Fix XSS**: `showNotification` usa `textContent` en lugar de `innerHTML` para mensajes dinámicos
 
-**Archivos existentes pero no utilizados activamente:**
-- `backend/models/Therapist.php`
-- `backend/api/therapists.php`
-- Tablas en BD: `therapists`, `therapist_availability`, `therapist_unavailable_days`
-
-**Razón de la remoción del panel admin:**
-- No tiene sentido gestionar "equipo de terapeutas" cuando es una sola persona
-- Los horarios de atención se manejan en el módulo de Horarios de Atención
-- El frontend fue ajustado a lenguaje personal ("Sobre Mí", "Mis Servicios", etc.)
-
-**En su lugar:**
-- El módulo de **Horarios de Atención** cubre la programación semanal
-- Los días no disponibles (vacaciones, permisos) se pueden gestionar como días festivos en el módulo de Horarios
-- No se requiere asignar terapeuta a cada reserva
+**Backend legacy PHP también actualizado** (por consistencia):
+- `backend/middleware/Auth.php`
+- `backend/api/auth.php`
 
 ---
 
 ## 🎯 Para la próxima sesión
 
-### Posibles siguientes pasos (pendiente decisión del usuario):
-
-**A. Contenido y diseño:**
-- [ ] Agregar imágenes reales (ahora son placeholders)
-- [ ] Cambiar colores si no le gustan
-- [ ] Agregar más servicios
-- [ ] Crear página "Nosotros" separada
-- [ ] Agregar galería de fotos
-
-**B. Funcionalidad backend:**
-- [x] Panel de administración ✅ COMPLETADO
-- [x] Integrar con calendario (Google Calendar API) ✅ IMPLEMENTADO (pendiente credenciales)
-- [ ] Enviar emails de confirmación (ya implementado parcialmente)
-- [ ] Historial de reservas por cliente
-- [ ] Sistema de cupones/descuentos
-
-**C. Panel de admin (mejoras):**
-- [ ] Completar sección "Servicios" (CRUD servicios)
-- [ ] Completar sección "Reportes" (gráficos, exportar Excel/PDF)
-- [x] Configuración de horarios de atención ✅ COMPLETADO
-- [ ] Backup/exportar base de datos
-
-**D. Técnicos:**
-- [ ] Configurar servidor de producción
-- [ ] SSL/HTTPS
-- [ ] Backup automático de BD
-- [ ] Tests unitarios
-
-**E. Integraciones:**
-- [ ] WhatsApp Business API para notificaciones
-- [ ] Pasarela de pagos (WebPay, MercadoPago)
-- [ ] Google Maps con ubicación real
+**Deploy a producción:**
+- [ ] Configurar variables de entorno en servidor (`SESSION_SECRET`, DB credentials)
+- [ ] Configurar PostgreSQL en producción y ejecutar `npm run init-db`
+- [ ] Configurar Google Calendar API (credenciales OAuth)
+- [ ] Configurar SSL/HTTPS
+- [ ] Configurar proxy reverso (nginx) si aplica
+- [ ] Pruebas end-to-end del formulario de reservas con horarios dinámicos
+- [ ] Verificar que el bloqueo de duración + 30 min funciona correctamente en BD
 
 ---
 
 ## 📝 Notas importantes
 
-- El usuario pidió spa de masajes → se creó "Sanación Consciente ASA"
-- Es un **negocio personal**: una sola terapeuta que atiende masajes en su casa (NO un spa con equipo)
-- El usuario pidió estructura con frontend/backend → se hizo separación clara
-- El usuario pidió panel de administración → se creó completo con login, dashboard y gestión de reservas
-- El formulario de reservas está funcional pero guarda en BD solo con servidor PHP
-- Todas las rutas son relativas (../backend/api/) para funcionar en subcarpetas
-- El menú hamburguesa solo se ve en móvil (< 768px)
-- Hay comentarios TODO en el código marcando futuras mejoras
-- El panel admin tiene datos de demostración para poder probarlo sin servidor
-- **Google Calendar:** para activar, editar `backend/config/google-calendar.php` y reemplazar los placeholders con credenciales reales de Google Cloud Console
-- **Módulo de Terapeutas:** fue removido del panel admin porque no aplica a un negocio personal (los archivos del backend aún existen en el repo por si se necesitan en el futuro)
+- El formulario de reservas ahora consulta la API para obtener slots disponibles antes de mostrar horas
+- Los horarios de lunes a viernes son muy restrictivos (solo 1 hora: 20:00-21:00), por lo que servicios de 45 o 60 min no caben allí debido al bloqueo de preparación
+- El número de teléfono real es +56 9 8990 8321
+- El panel de admin usa usuario `Mabel` (no `admin`)
+- Las credenciales de Google Calendar deben configurarse en `.env` antes de activar la integración
+- El negocio es personal: una sola terapeuta que atiende masajes en su casa
 
 ---
 
@@ -437,26 +357,24 @@ massage-spa/
 |---------|-----------|
 | `frontend/index.html` | Página principal del spa |
 | `frontend/css/style.css` | Tema visual spa |
-| `frontend/js/main.js` | Lógica del sitio público |
+| `frontend/js/main.js` | Lógica del sitio público + horas dinámicas |
 | `admin/login.html` | **Login del panel** |
 | `admin/dashboard.html` | **Dashboard principal** |
 | `admin/css/admin.css` | Estilos del panel |
 | `admin/js/admin.js` | Lógica del panel |
-| `backend/api/reservations.php` | API de reservas |
-| `backend/api/auth.php` | **API de autenticación** |
-| `backend/api/google-calendar.php` | **API de Google Calendar** |
-| `backend/api/business-hours.php` | **API de Horarios de Atención** |
-| `backend/api/therapists.php` | **API de Terapeutas** |
-| `backend/models/Reservation.php` | Modelo de datos |
-| `backend/models/BusinessHours.php` | **Modelo de Horarios** |
-| `backend/models/Therapist.php` | **Modelo de Terapeutas** |
-| `backend/middleware/Auth.php` | **Middleware de auth** |
-| `backend/services/GoogleCalendarService.php` | **Servicio de Google Calendar** |
-| `backend/config/database.php` | **Configuración de BD (tablas horarios, terapeutas)** |
-| `backend/config/google-calendar.php` | **Configuración de Google Calendar** |
+| `backend/api/reservations` | API de reservas (Node.js) |
+| `backend/api/auth` | **API de autenticación** |
+| `backend/api/google-calendar` | **API de Google Calendar** |
+| `backend/api/business-hours` | **API de Horarios de Atención** |
+| `backend/models/reservation.js` | Modelo de datos con service_duration |
+| `backend/models/businessHours.js` | **Modelo de Horarios con slots** |
+| `backend/middleware/auth.js` | **Middleware de auth** (usuario Mabel) |
+| `backend/services/googleCalendar.js` | **Servicio de Google Calendar** |
+| `backend/config/init-db.js` | **Inicialización BD con horarios actualizados** |
+| `server.js` | **Servidor Express con seguridad** |
 
 ---
 
 **Creado por:** Claude Code
-**Guardar en:** `/c/Users/Carlos/Downloads/proyectos Web/massage-spa/AVANCES_PROYECTO.md`
+**Guardar en:** `/Users/carlos/Proyectos Web/Proyecto Mabel/massage-spa/AVANCES_PROYECTO.md`
 **Actualizar:** Cada vez que haya cambios significativos

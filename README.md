@@ -96,7 +96,7 @@ massage-spa/
 {
   "name": "María González",
   "email": "maria@email.com",
-  "phone": "+56912345678",
+  "phone": "+56989908321",
   "service": "relajante",
   "date": "2025-04-20",
   "time": "15:00",

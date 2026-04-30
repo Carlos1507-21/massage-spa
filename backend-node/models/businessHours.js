@@ -103,6 +103,8 @@ class BusinessHours {
 
         const slots = [];
         const slotDuration = hours.slot_duration || 60;
+        const prepTime = 30; // minutos de preparación de sala (invisibles para el cliente)
+        const blockDuration = serviceDuration + prepTime;
         const openTime = this.timeToSeconds(hours.open_time);
         const closeTime = this.timeToSeconds(hours.close_time);
         const breakStart = hours.break_start ? this.timeToSeconds(hours.break_start) : null;
@@ -124,8 +126,14 @@ class BusinessHours {
                 }
             }
 
+            // Verificar que la sesión completa (incluyendo preparación) quepa en el horario
+            if (currentTime + (blockDuration * 60) > closeTime) {
+                currentTime += (slotDuration * 60);
+                continue;
+            }
+
             const slotTime = this.secondsToTime(currentTime);
-            const available = await this.checkSlotAvailability(date, slotTime, hours.max_bookings_per_slot || 1);
+            const available = await this.checkSlotAvailability(date, slotTime, hours.max_bookings_per_slot || 1, serviceDuration);
 
             if (available) {
                 slots.push({
@@ -141,15 +149,20 @@ class BusinessHours {
         return slots;
     }
 
-    // Verificar disponibilidad de un slot
-    async checkSlotAvailability(date, time, maxBookings) {
+    // Verificar disponibilidad de un slot considerando duración + preparación
+    async checkSlotAvailability(date, time, maxBookings, serviceDuration = 60) {
+        const prepTime = 30;
         const sql = `
             SELECT COUNT(*) as count FROM reservations
             WHERE reservation_date = $1
-            AND reservation_time = $2
             AND status IN ('pending', 'confirmed')
+            AND (
+                reservation_time < $2::time + ($3 + $4) * interval '1 minute'
+                AND
+                reservation_time + (COALESCE(service_duration, 60) + $4) * interval '1 minute' > $2::time
+            )
         `;
-        const result = await query(sql, [date, time]);
+        const result = await query(sql, [date, time, serviceDuration, prepTime]);
         return parseInt(result.rows[0].count) < maxBookings;
     }
 

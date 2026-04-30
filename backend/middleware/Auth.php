@@ -8,7 +8,7 @@ session_start();
 class Auth {
     // Usuario admin hardcodeado (en producción usar BD con hash seguro)
     private static $adminUser = [
-        'username' => 'admin',
+        'username' => 'Mabel',
         'password' => '$2y$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi' // bcrypt de "password"
     ];
 

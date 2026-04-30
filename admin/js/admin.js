@@ -579,7 +579,7 @@ function loadDemoReservations() {
     if (!tbody) return;
 
     const demoData = [
-        { id: 1, name: 'María González', email: 'maria@email.com', phone: '+56912345678', service: 'terapeutico', reservation_date: '2025-04-15', reservation_time: '15:00', status: 'pending' },
+        { id: 1, name: 'María González', email: 'maria@email.com', phone: '+56989908321', service: 'terapeutico', reservation_date: '2025-04-15', reservation_time: '15:00', status: 'pending' },
         { id: 2, name: 'Carlos Mendoza', email: 'carlos@email.com', phone: '+56987654321', service: 'relajante', reservation_date: '2025-04-14', reservation_time: '10:30', status: 'confirmed' },
         { id: 3, name: 'Laura Gutiérrez', email: 'laura@email.com', phone: '+56955544433', service: 'prenatal', reservation_date: '2025-04-16', reservation_time: '14:00', status: 'pending' },
         { id: 4, name: 'Ana Silva', email: 'ana@email.com', phone: '+56999988877', service: 'aromaterapia', reservation_date: '2025-04-18', reservation_time: '11:00', status: 'confirmed' },
@@ -884,13 +884,13 @@ async function loadBusinessHours() {
 
 function getDemoBusinessHours() {
     return [
-        { day_of_week: 0, day_name: 'Domingo', is_open: false, open_time: null, close_time: null, break_start: null, break_end: null, slot_duration: 60, max_bookings_per_slot: 1, is_active: true },
-        { day_of_week: 1, day_name: 'Lunes', is_open: true, open_time: '09:00:00', close_time: '19:00:00', break_start: '14:00:00', break_end: '15:00:00', slot_duration: 60, max_bookings_per_slot: 1, is_active: true },
-        { day_of_week: 2, day_name: 'Martes', is_open: true, open_time: '09:00:00', close_time: '19:00:00', break_start: '14:00:00', break_end: '15:00:00', slot_duration: 60, max_bookings_per_slot: 1, is_active: true },
-        { day_of_week: 3, day_name: 'Miércoles', is_open: true, open_time: '09:00:00', close_time: '19:00:00', break_start: '14:00:00', break_end: '15:00:00', slot_duration: 60, max_bookings_per_slot: 1, is_active: true },
-        { day_of_week: 4, day_name: 'Jueves', is_open: true, open_time: '09:00:00', close_time: '19:00:00', break_start: '14:00:00', break_end: '15:00:00', slot_duration: 60, max_bookings_per_slot: 1, is_active: true },
-        { day_of_week: 5, day_name: 'Viernes', is_open: true, open_time: '09:00:00', close_time: '19:00:00', break_start: '14:00:00', break_end: '15:00:00', slot_duration: 60, max_bookings_per_slot: 1, is_active: true },
-        { day_of_week: 6, day_name: 'Sábado', is_open: true, open_time: '10:00:00', close_time: '16:00:00', break_start: null, break_end: null, slot_duration: 60, max_bookings_per_slot: 1, is_active: true }
+        { day_of_week: 0, day_name: 'Domingo', is_open: true, open_time: '08:00:00', close_time: '18:00:00', break_start: null, break_end: null, slot_duration: 60, max_bookings_per_slot: 1, is_active: true },
+        { day_of_week: 1, day_name: 'Lunes', is_open: true, open_time: '20:00:00', close_time: '21:00:00', break_start: null, break_end: null, slot_duration: 60, max_bookings_per_slot: 1, is_active: true },
+        { day_of_week: 2, day_name: 'Martes', is_open: true, open_time: '20:00:00', close_time: '21:00:00', break_start: null, break_end: null, slot_duration: 60, max_bookings_per_slot: 1, is_active: true },
+        { day_of_week: 3, day_name: 'Miércoles', is_open: true, open_time: '20:00:00', close_time: '21:00:00', break_start: null, break_end: null, slot_duration: 60, max_bookings_per_slot: 1, is_active: true },
+        { day_of_week: 4, day_name: 'Jueves', is_open: true, open_time: '20:00:00', close_time: '21:00:00', break_start: null, break_end: null, slot_duration: 60, max_bookings_per_slot: 1, is_active: true },
+        { day_of_week: 5, day_name: 'Viernes', is_open: true, open_time: '20:00:00', close_time: '21:00:00', break_start: null, break_end: null, slot_duration: 60, max_bookings_per_slot: 1, is_active: true },
+        { day_of_week: 6, day_name: 'Sábado', is_open: false, open_time: null, close_time: null, break_start: null, break_end: null, slot_duration: 60, max_bookings_per_slot: 1, is_active: true }
     ];
 }
 

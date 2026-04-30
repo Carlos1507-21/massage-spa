@@ -196,7 +196,7 @@ function initDatabase() {
         -- Datos de ejemplo de terapeutas
         INSERT INTO therapists (name, email, phone, specialty, bio, is_active, max_daily_appointments)
         VALUES
-            ('Ana García', 'ana@sanacionconsciente.cl', '+56912345678', 'Masaje Relajante, Aromaterapia', 'Terapeuta certificada con 5 años de experiencia en masajes relajantes y aromaterapia.', TRUE, 6),
+            ('Ana García', 'ana@sanacionconsciente.cl', '+56989908321', 'Masaje Relajante, Aromaterapia', 'Terapeuta certificada con 5 años de experiencia en masajes relajantes y aromaterapia.', TRUE, 6),
             ('Carlos Mendoza', 'carlos@sanacionconsciente.cl', '+56923456789', 'Masaje Terapéutico, Piedras Calientes', 'Especialista en terapia de tejidos profundos y masaje con piedras calientes.', TRUE, 8),
             ('María Fernández', 'maria@sanacionconsciente.cl', '+56934567890', 'Reflexología, Masaje Prenatal', 'Experta en reflexología podal y masajes especializados para embarazadas.', TRUE, 6)
         ON DUPLICATE KEY UPDATE name = VALUES(name);

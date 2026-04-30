@@ -11,7 +11,7 @@ class WhatsApp {
 
     public function __construct() {
         // Número de WhatsApp del negocio (reemplazar con el real)
-        $this->businessNumber = $_ENV['WHATSAPP_NUMBER'] ?? '56912345678';
+        $this->businessNumber = $_ENV['WHATSAPP_NUMBER'] ?? '56989908321';
     }
 
     /**
@@ -142,7 +142,7 @@ class WhatsApp {
         $cleaned = preg_replace('/[^0-9]/', '', $number);
 
         // Chile: debe tener 9 dígitos después del código de país
-        // Ej: 56912345678 (11 dígitos con código) o 912345678 (9 sin código)
+        // Ej: 56989908321 (11 dígitos con código) o 912345678 (9 sin código)
         if (strlen($cleaned) === 9) {
             // Agregar código de país si falta
             return '56' . $cleaned;

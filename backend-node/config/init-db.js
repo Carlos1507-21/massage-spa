@@ -24,6 +24,7 @@ CREATE TABLE IF NOT EXISTS reservations (
     email VARCHAR(100) NOT NULL,
     phone VARCHAR(20) NOT NULL,
     service VARCHAR(50) NOT NULL,
+    service_duration INTEGER DEFAULT 60,
     reservation_date DATE NOT NULL,
     reservation_time TIME,
     message TEXT,
@@ -166,13 +167,13 @@ const SEED_DATA = `
 -- ============================================
 INSERT INTO business_hours (day_of_week, day_name, is_open, open_time, close_time, break_start, break_end, slot_duration, max_bookings_per_slot, is_active)
 VALUES
-    (0, 'Domingo', FALSE, NULL, NULL, NULL, NULL, 60, 1, TRUE),
-    (1, 'Lunes', TRUE, '09:00', '19:00', '14:00', '15:00', 60, 1, TRUE),
-    (2, 'Martes', TRUE, '09:00', '19:00', '14:00', '15:00', 60, 1, TRUE),
-    (3, 'Miércoles', TRUE, '09:00', '19:00', '14:00', '15:00', 60, 1, TRUE),
-    (4, 'Jueves', TRUE, '09:00', '19:00', '14:00', '15:00', 60, 1, TRUE),
-    (5, 'Viernes', TRUE, '09:00', '19:00', '14:00', '15:00', 60, 1, TRUE),
-    (6, 'Sábado', TRUE, '10:00', '16:00', NULL, NULL, 60, 1, TRUE)
+    (0, 'Domingo', TRUE, '08:00', '18:00', NULL, NULL, 60, 1, TRUE),
+    (1, 'Lunes', TRUE, '20:00', '21:00', NULL, NULL, 60, 1, TRUE),
+    (2, 'Martes', TRUE, '20:00', '21:00', NULL, NULL, 60, 1, TRUE),
+    (3, 'Miércoles', TRUE, '20:00', '21:00', NULL, NULL, 60, 1, TRUE),
+    (4, 'Jueves', TRUE, '20:00', '21:00', NULL, NULL, 60, 1, TRUE),
+    (5, 'Viernes', TRUE, '20:00', '21:00', NULL, NULL, 60, 1, TRUE),
+    (6, 'Sábado', FALSE, NULL, NULL, NULL, NULL, 60, 1, TRUE)
 ON CONFLICT (day_of_week) DO NOTHING;
 
 -- ============================================

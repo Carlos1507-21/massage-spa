@@ -62,6 +62,13 @@ document.addEventListener('DOMContentLoaded', function() {
         dateInput.min = tomorrow.toISOString().split('T')[0];
     }
 
+    // Dynamic available hours based on date and service
+    const serviceInput = document.getElementById('service');
+    if (dateInput && serviceInput) {
+        dateInput.addEventListener('change', updateAvailableTimes);
+        serviceInput.addEventListener('change', updateAvailableTimes);
+    }
+
     // Form handling
     const reservationForm = document.getElementById('reservationForm');
     if (reservationForm) {
@@ -71,6 +78,85 @@ document.addEventListener('DOMContentLoaded', function() {
     // Intersection Observer for animations
     initScrollAnimations();
 });
+
+// Service durations (minutes) — visible to client
+const SERVICE_DURATIONS = {
+    'relajante-espalda': 45,
+    'relajante-completo': 60,
+    'piedras-espalda': 45,
+    'piedras-completo': 60,
+    'aromaterapia-espalda': 30,
+    'aromaterapia-completo': 45
+};
+
+// Fetch and populate available time slots
+async function updateAvailableTimes() {
+    const dateInput = document.getElementById('date');
+    const serviceInput = document.getElementById('service');
+    const timeSelect = document.getElementById('time');
+
+    if (!dateInput || !serviceInput || !timeSelect) return;
+
+    const date = dateInput.value;
+    const service = serviceInput.value;
+
+    if (!date || !service) {
+        timeSelect.innerHTML = '<option value="">Selecciona hora</option>';
+        timeSelect.disabled = true;
+        return;
+    }
+
+    const duration = SERVICE_DURATIONS[service] || 60;
+    timeSelect.disabled = true;
+    timeSelect.innerHTML = '<option value="">Cargando horas...</option>';
+
+    try {
+        const response = await fetch(`/backend/api/business-hours?slots=1&date=${date}&duration=${duration}`);
+        const result = await response.json();
+
+        if (result.success && result.data && result.data.slots && result.data.slots.length > 0) {
+            const options = result.data.slots.map(slot => {
+                const timeLabel = slot.time.substring(0, 5);
+                return `<option value="${timeLabel}">${timeLabel}</option>`;
+            }).join('');
+            timeSelect.innerHTML = '<option value="">Selecciona hora</option>' + options;
+            timeSelect.disabled = false;
+        } else {
+            timeSelect.innerHTML = '<option value="">No hay horas disponibles</option>';
+            timeSelect.disabled = true;
+        }
+    } catch (error) {
+        console.error('Error cargando horarios:', error);
+        // Fallback: mostrar horarios genéricos según día de la semana
+        populateFallbackTimes(date);
+    }
+}
+
+// Fallback time slots based on day of week (used when API is unreachable)
+function populateFallbackTimes(date) {
+    const timeSelect = document.getElementById('time');
+    if (!timeSelect) return;
+
+    const day = new Date(date).getDay();
+    let times = [];
+
+    if (day >= 1 && day <= 5) {
+        times = ['20:00'];
+    } else if (day === 0) {
+        times = ['08:00', '09:00', '10:00', '11:00', '12:00', '13:00', '14:00', '15:00', '16:00', '17:00'];
+    } else {
+        times = [];
+    }
+
+    if (times.length > 0) {
+        const options = times.map(t => `<option value="${t}">${t}</option>`).join('');
+        timeSelect.innerHTML = '<option value="">Selecciona hora</option>' + options;
+        timeSelect.disabled = false;
+    } else {
+        timeSelect.innerHTML = '<option value="">No hay horas disponibles</option>';
+        timeSelect.disabled = true;
+    }
+}
 
 // Form submission handler
 async function handleFormSubmit(e) {
@@ -144,11 +230,23 @@ function showNotification(message, type = 'success') {
 
     const notification = document.createElement('div');
     notification.className = `notification notification-${type}`;
-    notification.innerHTML = `
-        <span class="notification-icon">${type === 'success' ? '✓' : '⚠'}</span>
-        <span class="notification-message">${message}</span>
-        <button class="notification-close" aria-label="Cerrar">×</button>
-    `;
+
+    const icon = document.createElement('span');
+    icon.className = 'notification-icon';
+    icon.textContent = type === 'success' ? '✓' : '⚠';
+    notification.appendChild(icon);
+
+    const msgSpan = document.createElement('span');
+    msgSpan.className = 'notification-message';
+    msgSpan.textContent = message; // textContent evita XSS
+    notification.appendChild(msgSpan);
+
+    const closeBtn = document.createElement('button');
+    closeBtn.className = 'notification-close';
+    closeBtn.setAttribute('aria-label', 'Cerrar');
+    closeBtn.textContent = '×';
+    closeBtn.style.cssText = 'background: none; border: none; color: white; font-size: 1.5rem; cursor: pointer; margin-left: auto;';
+    notification.appendChild(closeBtn);
 
     const styles = {
         position: 'fixed',
@@ -170,25 +268,18 @@ function showNotification(message, type = 'success') {
 
     Object.assign(notification.style, styles);
 
-    // Close button
-    const closeBtn = notification.querySelector('.notification-close');
-    closeBtn.style.cssText = 'background: none; border: none; color: white; font-size: 1.5rem; cursor: pointer; margin-left: auto;';
-
     const closeNotification = () => {
         notification.style.transform = 'translateX(400px)';
         setTimeout(() => notification.remove(), 300);
     };
 
     closeBtn.addEventListener('click', closeNotification);
-
     document.body.appendChild(notification);
 
-    // Animate in
     requestAnimationFrame(() => {
         notification.style.transform = 'translateX(0)';
     });
 
-    // Auto-close
     setTimeout(closeNotification, 5000);
 }
 

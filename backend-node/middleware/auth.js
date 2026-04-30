@@ -6,9 +6,9 @@ const bcrypt = require('bcryptjs');
 
 // Admin user (hardcoded, same as PHP version)
 const ADMIN_USER = {
-    username: 'admin',
-    // bcrypt hash of "password"
-    passwordHash: '$2a$10$92IXUNpkjO0rOQ5byMi.Ye4oKoEa3Ro9llC/.og/at2.uheWG/igi'
+    username: 'Mabel',
+    // bcrypt hash of "204Mabel.3"
+    passwordHash: '$2a$10$lJit1iAM3QS.AdrrQ.n/beVbueQSlFUhosLVVMdDUDdZWM2T2NsGi'
 };
 
 /**

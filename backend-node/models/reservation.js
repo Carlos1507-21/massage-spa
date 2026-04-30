@@ -8,8 +8,8 @@ class Reservation {
     // Crear nueva reserva
     async create(data) {
         const sql = `
-            INSERT INTO reservations (name, email, phone, service, reservation_date, reservation_time, message, therapist_id, status)
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'pending')
+            INSERT INTO reservations (name, email, phone, service, service_duration, reservation_date, reservation_time, message, therapist_id, status)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'pending')
             RETURNING id
         `;
         const result = await query(sql, [
@@ -17,6 +17,7 @@ class Reservation {
             data.email,
             data.phone,
             data.service,
+            data.service_duration || 60,
             data.date,
             data.time || null,
             data.message || null,
@@ -62,15 +63,20 @@ class Reservation {
         return result.rowCount > 0;
     }
 
-    // Verificar disponibilidad
-    async checkAvailability(date, time) {
+    // Verificar disponibilidad considerando duración + preparación
+    async checkAvailability(date, time, serviceDuration = 60) {
+        const prepTime = 30;
         const sql = `
             SELECT COUNT(*) as count FROM reservations
             WHERE reservation_date = $1
-            AND reservation_time = $2
             AND status != 'cancelled'
+            AND (
+                reservation_time < $2::time + ($3 + $4) * interval '1 minute'
+                AND
+                reservation_time + (COALESCE(service_duration, 60) + $4) * interval '1 minute' > $2::time
+            )
         `;
-        const result = await query(sql, [date, time]);
+        const result = await query(sql, [date, time, serviceDuration, prepTime]);
         return result.rows[0].count == 0;
     }
 
