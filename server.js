@@ -54,6 +54,7 @@ app.use('/backend/api/auth/login', authLimiter);
 const reservationLimiter = rateLimit({
     windowMs: 60 * 60 * 1000,
     max: 10,
+    skip: (req) => req.method === 'GET',
     message: { success: false, message: 'Demasiadas reservas desde esta IP, intenta más tarde' }
 });
 app.use('/backend/api/reservations', reservationLimiter);

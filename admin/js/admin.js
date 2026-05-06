@@ -141,8 +141,11 @@ async function updateStats() {
             document.getElementById('statToday').textContent = todayCount;
             document.getElementById('pendingCount').textContent = pending;
 
-            // Simulated revenue (en producción calcular desde BD)
-            const revenue = confirmed * 50000; // Promedio $50.000
+            // Revenue basado en precios de servicios
+            let revenue = 0;
+            reservations.filter(r => r.status === 'confirmed').forEach(r => {
+                revenue += (MANUAL_REGULAR_PRICES[r.service] || 0);
+            });
             document.getElementById('statRevenue').textContent = '$' + revenue.toLocaleString('es-CL');
 
             // Update notifications
