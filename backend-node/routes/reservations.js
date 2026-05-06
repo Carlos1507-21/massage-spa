@@ -43,6 +43,25 @@ function isFutureDate(dateStr) {
     return input >= today;
 }
 
+async function syncReservationWithCalendar(reservationId, data) {
+    try {
+        const connected = await googleCalendarService.isConnected();
+        if (!connected) {
+            console.log(`Google Calendar no conectado. Reserva ${reservationId} no se sincronizó.`);
+            return;
+        }
+        if (!data.date || !data.time) {
+            console.log(`Reserva ${reservationId} sin fecha/hora. No se sincroniza con Calendar.`);
+            return;
+        }
+        const eventId = await googleCalendarService.createEvent(data);
+        await Reservation.setCalendarEventId(reservationId, eventId);
+        console.log(`Reserva ${reservationId} sincronizada con Google Calendar. EventId: ${eventId}`);
+    } catch (calErr) {
+        console.error('Error sincronizando con Google Calendar:', calErr.message);
+    }
+}
+
 /**
  * GET /backend/api/reservations
  * GET /backend/api/reservations?status=pending
@@ -109,6 +128,7 @@ router.post('/', async (req, res) => {
             };
 
             const id = await Reservation.create(cleanData);
+            await syncReservationWithCalendar(id, cleanData);
             return jsonResponse(res, true, 'Reserva creada exitosamente', { id });
         }
 
@@ -195,16 +215,7 @@ router.post('/', async (req, res) => {
             };
 
             // Sincronizar con Google Calendar
-            try {
-                const connected = await googleCalendarService.isConnected();
-                if (connected && data.date && data.time) {
-                    const eventId = await googleCalendarService.createEvent(data);
-                    await Reservation.setCalendarEventId(id, eventId);
-                }
-            } catch (calErr) {
-                console.error('Error sincronizando con Google Calendar:', calErr.message);
-                // No fallar la reserva si Google Calendar falla
-            }
+            await syncReservationWithCalendar(id, cleanData);
 
             return res.status(201).json(response);
         } else {
