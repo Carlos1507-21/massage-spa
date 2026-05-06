@@ -126,8 +126,8 @@ class BusinessHours {
                 }
             }
 
-            // Verificar que la sesión completa (incluyendo preparación) quepa en el horario
-            if (currentTime + (blockDuration * 60) > closeTime) {
+            // Verificar que la sesión visible quepa en el horario (la prep puede extenderse más allá del cierre si es el último slot)
+            if (currentTime + (serviceDuration * 60) > closeTime) {
                 currentTime += (slotDuration * 60);
                 continue;
             }
@@ -157,9 +157,9 @@ class BusinessHours {
             WHERE reservation_date = $1
             AND status IN ('pending', 'confirmed')
             AND (
-                reservation_time < $2::time + ($3 + $4) * interval '1 minute'
+                reservation_time < ($2::time + (interval '1 minute' * ($3::int + $4::int)))
                 AND
-                reservation_time + (COALESCE(service_duration, 60) + $4) * interval '1 minute' > $2::time
+                reservation_time + (interval '1 minute' * (COALESCE(service_duration, 60)::int + $4::int)) > $2::time
             )
         `;
         const result = await query(sql, [date, time, serviceDuration, prepTime]);

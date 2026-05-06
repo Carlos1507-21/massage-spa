@@ -89,6 +89,20 @@ const SERVICE_DURATIONS = {
     'aromaterapia-completo': 45
 };
 
+const REGULAR_PRICES = {
+    'relajante-espalda': 20000,
+    'relajante-completo': 30000,
+    'piedras-espalda': 30000,
+    'piedras-completo': 35000,
+    'aromaterapia-espalda': 25000,
+    'aromaterapia-completo': 30000
+};
+
+function escapeHtml(str) {
+    if (typeof str !== 'string') return '';
+    return str.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+}
+
 // Fetch and populate available time slots
 async function updateAvailableTimes() {
     const dateInput = document.getElementById('date');
@@ -115,20 +129,33 @@ async function updateAvailableTimes() {
         const result = await response.json();
 
         if (result.success && result.data && result.data.slots && result.data.slots.length > 0) {
-            const options = result.data.slots.map(slot => {
+            timeSelect.innerHTML = '';
+            const defaultOpt = document.createElement('option');
+            defaultOpt.value = '';
+            defaultOpt.textContent = 'Selecciona hora';
+            timeSelect.appendChild(defaultOpt);
+            result.data.slots.forEach(slot => {
                 const timeLabel = slot.time.substring(0, 5);
-                return `<option value="${timeLabel}">${timeLabel}</option>`;
-            }).join('');
-            timeSelect.innerHTML = '<option value="">Selecciona hora</option>' + options;
+                const opt = document.createElement('option');
+                opt.value = timeLabel;
+                opt.textContent = timeLabel;
+                timeSelect.appendChild(opt);
+            });
             timeSelect.disabled = false;
         } else {
-            timeSelect.innerHTML = '<option value="">No hay horas disponibles</option>';
+            timeSelect.innerHTML = '';
+            const opt = document.createElement('option');
+            opt.value = '';
+            opt.textContent = 'No hay horas disponibles';
+            timeSelect.appendChild(opt);
             timeSelect.disabled = true;
         }
     } catch (error) {
         console.error('Error cargando horarios:', error);
         // Fallback: mostrar horarios genéricos según día de la semana
         populateFallbackTimes(date);
+    } finally {
+        updatePromoDisplay();
     }
 }
 
@@ -148,13 +175,77 @@ function populateFallbackTimes(date) {
         times = [];
     }
 
+    timeSelect.innerHTML = '';
     if (times.length > 0) {
-        const options = times.map(t => `<option value="${t}">${t}</option>`).join('');
-        timeSelect.innerHTML = '<option value="">Selecciona hora</option>' + options;
+        const defaultOpt = document.createElement('option');
+        defaultOpt.value = '';
+        defaultOpt.textContent = 'Selecciona hora';
+        timeSelect.appendChild(defaultOpt);
+        times.forEach(t => {
+            const opt = document.createElement('option');
+            opt.value = t;
+            opt.textContent = t;
+            timeSelect.appendChild(opt);
+        });
         timeSelect.disabled = false;
     } else {
-        timeSelect.innerHTML = '<option value="">No hay horas disponibles</option>';
+        const opt = document.createElement('option');
+        opt.value = '';
+        opt.textContent = 'No hay horas disponibles';
+        timeSelect.appendChild(opt);
         timeSelect.disabled = true;
+    }
+}
+
+async function updatePromoDisplay() {
+    const serviceInput = document.getElementById('service');
+    const dateInput = document.getElementById('date');
+    const promoInfo = document.getElementById('promoInfo');
+
+    if (!serviceInput || !dateInput || !promoInfo) return;
+
+    const service = serviceInput.value;
+    const date = dateInput.value;
+
+    if (!service || !date) {
+        promoInfo.style.display = 'none';
+        return;
+    }
+
+    try {
+        const response = await fetch(`/backend/api/promotions?date=${date}&service=${service}`);
+        const result = await response.json();
+
+        if (result.success && result.data && result.data.promotions && result.data.promotions.length > 0) {
+            const promo = result.data.promotions[0];
+            const regular = REGULAR_PRICES[service] || 0;
+
+            let finalPrice = promo.price;
+            let discountLabel = '';
+
+            if (promo.discount_type === 'percentage' && promo.discount_value > 0) {
+                finalPrice = Math.round(regular * (1 - promo.discount_value / 100));
+                discountLabel = `${promo.discount_value}% de descuento`;
+            }
+
+            const discount = regular - finalPrice;
+
+            promoInfo.innerHTML = `
+                <div style="background:#f0faf2; border-left:4px solid #4CAF7A; padding:0.75rem 1rem; border-radius:6px;">
+                    <strong style="color:#2d7a4f;">${escapeHtml(promo.name)}</strong>
+                    ${discountLabel ? `<span style="color:#c44d4d; font-size:0.85rem; margin-left:0.5rem;">(${escapeHtml(discountLabel)})</span>` : ''}<br>
+                    <span style="text-decoration:line-through; color:#888;">$${regular.toLocaleString('es-CL')}</span>
+                    <span style="color:#c44d4d; font-weight:bold; font-size:1.1rem;"> $${Number(finalPrice).toLocaleString('es-CL')} CLP</span>
+                    ${discount > 0 ? `<span style="color:#4CAF7A; font-size:0.85rem;"> ¡Ahorras $${discount.toLocaleString('es-CL')}!</span>` : ''}
+                </div>
+            `;
+            promoInfo.style.display = 'block';
+        } else {
+            promoInfo.style.display = 'none';
+        }
+    } catch (error) {
+        console.error('Error cargando promoción:', error);
+        promoInfo.style.display = 'none';
     }
 }
 

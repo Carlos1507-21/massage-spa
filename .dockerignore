@@ -43,4 +43,8 @@ cache/
 # Archivos de compilación
 dist/
 build/
+
+# Archivos no necesarios en producción
 frontend/email-viewer.html
+backend/
+docs/

@@ -48,7 +48,7 @@ function isFutureDate(dateStr) {
  * GET /backend/api/reservations?status=pending
  * GET /backend/api/reservations?id=123
  */
-router.get('/', async (req, res) => {
+router.get('/', requireAuth, async (req, res) => {
     try {
         const { status, id } = req.query;
 
@@ -78,8 +78,41 @@ router.get('/', async (req, res) => {
 router.post('/', async (req, res) => {
     try {
         const data = req.body;
+        const isAdmin = data.is_admin === true;
 
-        // Validación de campos requeridos
+        // Validación mínima: nombre siempre requerido
+        if (!data.name || typeof data.name !== 'string' || data.name.trim().length < 2) {
+            return jsonResponse(res, false, 'El nombre es requerido (mínimo 2 caracteres)', null, 400);
+        }
+
+        const name = sanitize(data.name);
+
+        // Para admin: solo nombre es obligatorio, el resto usa defaults
+        if (isAdmin) {
+            const email = (data.email || 'sin-email@local').trim().toLowerCase();
+            const phone = (data.phone || 'Sin teléfono').trim();
+            const service = (data.service || 'relajante-completo').trim();
+            const serviceDuration = SERVICE_DURATIONS[service] || 60;
+            const date = data.date || new Date().toISOString().split('T')[0];
+            const time = data.time || '10:00';
+            const message = data.message ? sanitize(data.message).substring(0, 500) : '';
+
+            const cleanData = {
+                name,
+                email,
+                phone,
+                service,
+                service_duration: serviceDuration,
+                date,
+                time,
+                message
+            };
+
+            const id = await Reservation.create(cleanData);
+            return jsonResponse(res, true, 'Reserva creada exitosamente', { id });
+        }
+
+        // Validación de campos requeridos (solo clientes)
         const required = ['name', 'email', 'phone', 'service', 'date'];
         for (const field of required) {
             if (!data[field] || typeof data[field] !== 'string') {
@@ -87,10 +120,8 @@ router.post('/', async (req, res) => {
             }
         }
 
-        // Sanitización y validación
-        const name = sanitize(data.name);
-        if (name.length < 2 || name.length > 100) {
-            return jsonResponse(res, false, 'Nombre debe tener entre 2 y 100 caracteres', null, 400);
+        if (name.length > 100) {
+            return jsonResponse(res, false, 'Nombre debe tener máximo 100 caracteres', null, 400);
         }
 
         const email = data.email.trim().toLowerCase();

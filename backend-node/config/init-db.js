@@ -152,6 +152,24 @@ CREATE TABLE IF NOT EXISTS therapist_unavailable_days (
 );
 
 -- ============================================
+-- Tabla de promociones
+-- ============================================
+CREATE TABLE IF NOT EXISTS promotions (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(100) NOT NULL,
+    description TEXT,
+    price INTEGER NOT NULL DEFAULT 0,
+    discount_type VARCHAR(20) DEFAULT 'fixed',
+    discount_value INTEGER DEFAULT 0,
+    start_date DATE NOT NULL,
+    end_date DATE NOT NULL,
+    applicable_services TEXT NOT NULL DEFAULT 'all',
+    is_active BOOLEAN DEFAULT TRUE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- ============================================
 -- Índices
 -- ============================================
 CREATE INDEX IF NOT EXISTS idx_reservations_date ON reservations(reservation_date);
@@ -159,6 +177,7 @@ CREATE INDEX IF NOT EXISTS idx_reservations_status ON reservations(status);
 CREATE INDEX IF NOT EXISTS idx_reservations_email ON reservations(email);
 CREATE INDEX IF NOT EXISTS idx_special_days_date ON special_days(date);
 CREATE INDEX IF NOT EXISTS idx_therapist_unavailable_days_date ON therapist_unavailable_days(date);
+CREATE INDEX IF NOT EXISTS idx_promotions_dates ON promotions(start_date, end_date);
 `;
 
 const SEED_DATA = `

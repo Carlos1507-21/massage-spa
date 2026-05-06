@@ -17,10 +17,10 @@ const SMTP_CONFIG = {
     }
 };
 
-const EMAIL_FROM = process.env.EMAIL_FROM || 'masajesanacionasa@gmail.com';
+const EMAIL_FROM = process.env.EMAIL_FROM || 'noreply@tudominio.cl';
 const EMAIL_NAME = process.env.EMAIL_NAME || 'Sanación Consciente ASA';
-const EMAIL_REPLY_TO = process.env.EMAIL_REPLY_TO || 'masajesanacionasa@gmail.com';
-const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'masajesanacionasa@gmail.com';
+const EMAIL_REPLY_TO = process.env.EMAIL_REPLY_TO || 'noreply@tudominio.cl';
+const ADMIN_EMAIL = process.env.ADMIN_EMAIL || 'admin@tudominio.cl';
 const SEND_REAL_EMAILS = process.env.SEND_REAL_EMAILS === 'true';
 const LOG_EMAILS = process.env.LOG_EMAILS !== 'false';
 const LOG_PATH = path.join(__dirname, '../logs/emails.log');
@@ -156,7 +156,7 @@ function getNewReservationTemplate(data) {
                 </p>
             </div>
             <div class='footer'>
-                <p>📍 Detrás del Mall Quilín, Peñalolén<br>📞 +56 9 1234 5678<br>✉️ masajesanacionasa@gmail.com</p>
+                <p>📍 Detrás del Mall Quilín, Peñalolén<br>📞 +56 9 1234 5678<br>✉️ ${ADMIN_EMAIL}</p>
                 <p><small>Este es un email automático, por favor no respondas a este mensaje.</small></p>
             </div>
         </div>

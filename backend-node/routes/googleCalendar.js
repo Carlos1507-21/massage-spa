@@ -31,12 +31,13 @@ router.get('/callback', async (req, res) => {
 
         if (error) {
             console.error('Google OAuth error:', error);
+            const safeError = String(error).replace(/</g, '&lt;').replace(/>/g, '&gt;');
             return res.status(400).send(`
                 <html><body style="font-family:sans-serif;text-align:center;padding:40px;">
                     <h1 style="color:#e74c3c;">❌ Error de autorización</h1>
                     <p>Google Calendar no pudo ser conectado.</p>
-                    <p><strong>Error:</strong> ${error}</p>
-                    <a href="/frontend/index.html" style="color:#4CAF7A;">Volver al sitio</a>
+                    <p><strong>Error:</strong> ${safeError}</p>
+                    <a href="/" style="color:#4CAF7A;">Volver al sitio</a>
                 </body></html>
             `);
         }
@@ -46,7 +47,7 @@ router.get('/callback', async (req, res) => {
                 <html><body style="font-family:sans-serif;text-align:center;padding:40px;">
                     <h1 style="color:#e74c3c;">❌ Código no recibido</h1>
                     <p>No se recibió el código de autorización de Google.</p>
-                    <a href="/frontend/index.html" style="color:#4CAF7A;">Volver al sitio</a>
+                    <a href="/" style="color:#4CAF7A;">Volver al sitio</a>
                 </body></html>
             `);
         }
@@ -58,17 +59,18 @@ router.get('/callback', async (req, res) => {
                 <h1 style="color:#4CAF7A;">✅ Google Calendar conectado</h1>
                 <p>La integración con Google Calendar se ha configurado exitosamente.</p>
                 <p>Las reservas se sincronizarán automáticamente con tu calendario.</p>
-                <a href="/frontend/index.html" style="color:#4CAF7A;">Volver al sitio</a>
+                <a href="/" style="color:#4CAF7A;">Volver al sitio</a>
             </body></html>
         `);
     } catch (err) {
         console.error('Error in Google OAuth callback:', err.message);
+        const safeMsg = String(err.message).replace(/</g, '&lt;').replace(/>/g, '&gt;');
         res.status(500).send(`
             <html><body style="font-family:sans-serif;text-align:center;padding:40px;">
                 <h1 style="color:#e74c3c;">❌ Error al conectar</h1>
                 <p>No se pudo completar la conexión con Google Calendar.</p>
-                <p><strong>Detalle:</strong> ${err.message}</p>
-                <a href="/frontend/index.html" style="color:#4CAF7A;">Volver al sitio</a>
+                <p><strong>Detalle:</strong> ${safeMsg}</p>
+                <a href="/" style="color:#4CAF7A;">Volver al sitio</a>
             </body></html>
         `);
     }

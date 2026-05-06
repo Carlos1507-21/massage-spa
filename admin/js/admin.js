@@ -3,11 +3,20 @@
 // SANACIÓN CONSCIENTE - Admin Panel JavaScript
 // ============================================
 
-document.addEventListener('DOMContentLoaded', function() {
-    // Check authentication
-    checkAuth();
+function escapeHtml(str) {
+    if (typeof str !== 'string') return '';
+    return str
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+}
 
-    // Initialize all components
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('[Admin] DOMContentLoaded iniciado');
+
+    checkAuth();
     initNavigation();
     initStats();
     initReservations();
@@ -16,31 +25,24 @@ document.addEventListener('DOMContentLoaded', function() {
     initSearch();
     initIntegrations();
     initBusinessHours();
-    // initTherapists() removed: personal business (single therapist)
+    initPromotions();
+    initManualReservation();
+
+    console.log('[Admin] Inicializacion completa');
 });
 
 // Check authentication
 async function checkAuth() {
-    // Modo demo: si la URL tiene ?demo=1, no verificar auth
-    const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get('demo') === '1') {
-        console.log('Demo mode: auth check skipped');
-        return;
-    }
-
     try {
         const response = await fetch('/backend/api/auth/check', { credentials: 'include' });
         const data = await response.json();
 
         if (!data.success) {
-            window.location.href = 'login.html';
+            window.location.href = 'login';
         }
     } catch (error) {
         console.error('Auth check error:', error);
-        // Si no hay servidor PHP, redirigir a login para entrar en modo demo
-        if (!window.location.search.includes('demo=1')) {
-            window.location.href = 'login.html';
-        }
+        window.location.href = 'login';
     }
 }
 
@@ -175,8 +177,8 @@ function loadRecentReservations(reservations) {
             <div class="recent-item">
                 <div class="recent-icon">${getServiceIcon(r.service)}</div>
                 <div class="recent-info">
-                    <h4>${r.name}</h4>
-                    <p>${formatServiceName(r.service)} • ${formatDate(r.reservation_date)}</p>
+                    <h4>${escapeHtml(r.name)}</h4>
+                    <p>${escapeHtml(formatServiceName(r.service))} • ${escapeHtml(formatDate(r.reservation_date))}</p>
                 </div>
                 <span class="recent-status ${statusClass}">${statusText}</span>
             </div>
@@ -212,12 +214,12 @@ function loadUpcomingAppointments(reservations) {
         return `
             <div class="appointment-item">
                 <div class="appointment-time">
-                    <span class="time">${time}</span>
+                    <span class="time">${escapeHtml(time)}</span>
                     <span class="ampm">${ampm}</span>
                 </div>
                 <div class="appointment-details">
-                    <h4>${r.name}</h4>
-                    <p>${formatServiceName(r.service)}</p>
+                    <h4>${escapeHtml(r.name)}</h4>
+                    <p>${escapeHtml(formatServiceName(r.service))}</p>
                 </div>
             </div>
         `;
@@ -295,35 +297,35 @@ async function loadReservations() {
 
 // Create reservation row HTML
 function createReservationRow(r) {
-    const statusClass = `status-${r.status}`;
+    const statusClass = `status-${escapeHtml(r.status)}`;
     const statusText = {
         'pending': 'Pendiente',
         'confirmed': 'Confirmada',
         'cancelled': 'Cancelada'
-    }[r.status] || r.status;
+    }[r.status] || escapeHtml(r.status);
 
     const time = r.reservation_time ? r.reservation_time.substring(0, 5) : '--:--';
 
     return `
         <tr>
-            <td>#${r.id}</td>
-            <td><strong>${r.name}</strong></td>
-            <td>${formatServiceName(r.service)}</td>
-            <td>${formatDate(r.reservation_date)}</td>
-            <td>${time}</td>
+            <td>#${escapeHtml(String(r.id))}</td>
+            <td><strong>${escapeHtml(r.name)}</strong></td>
+            <td>${escapeHtml(formatServiceName(r.service))}</td>
+            <td>${escapeHtml(formatDate(r.reservation_date))}</td>
+            <td>${escapeHtml(time)}</td>
             <td>
-                <div>${r.email}</div>
-                <small>${r.phone}</small>
+                <div>${escapeHtml(r.email)}</div>
+                <small>${escapeHtml(r.phone)}</small>
             </td>
             <td><span class="status-badge ${statusClass}">${statusText}</span></td>
             <td>
                 <div class="actions">
-                    <button class="btn-action btn-view" data-id="${r.id}" title="Ver detalle">👁️</button>
+                    <button class="btn-action btn-view" data-id="${escapeHtml(String(r.id))}" title="Ver detalle">👁️</button>
                     ${r.status === 'pending' ? `
-                        <button class="btn-action btn-confirm" data-id="${r.id}" title="Confirmar">✓</button>
+                        <button class="btn-action btn-confirm" data-id="${escapeHtml(String(r.id))}" title="Confirmar">✓</button>
                     ` : ''}
                     ${r.status !== 'cancelled' ? `
-                        <button class="btn-action btn-cancel" data-id="${r.id}" title="Cancelar">✕</button>
+                        <button class="btn-action btn-cancel" data-id="${escapeHtml(String(r.id))}" title="Cancelar">✕</button>
                     ` : ''}
                 </div>
             </td>
@@ -344,42 +346,42 @@ async function viewReservation(id) {
             const html = `
                 <div class="detail-row">
                     <div class="detail-label">ID:</div>
-                    <div class="detail-value">#${r.id}</div>
+                    <div class="detail-value">#${escapeHtml(String(r.id))}</div>
                 </div>
                 <div class="detail-row">
                     <div class="detail-label">Cliente:</div>
-                    <div class="detail-value">${r.name}</div>
+                    <div class="detail-value">${escapeHtml(r.name)}</div>
                 </div>
                 <div class="detail-row">
                     <div class="detail-label">Email:</div>
-                    <div class="detail-value">${r.email}</div>
+                    <div class="detail-value">${escapeHtml(r.email)}</div>
                 </div>
                 <div class="detail-row">
                     <div class="detail-label">Teléfono:</div>
-                    <div class="detail-value">${r.phone}</div>
+                    <div class="detail-value">${escapeHtml(r.phone)}</div>
                 </div>
                 <div class="detail-row">
                     <div class="detail-label">Servicio:</div>
-                    <div class="detail-value">${formatServiceName(r.service)}</div>
+                    <div class="detail-value">${escapeHtml(formatServiceName(r.service))}</div>
                 </div>
                 <div class="detail-row">
                     <div class="detail-label">Fecha:</div>
-                    <div class="detail-value">${formatDate(r.reservation_date)}</div>
+                    <div class="detail-value">${escapeHtml(formatDate(r.reservation_date))}</div>
                 </div>
                 <div class="detail-row">
                     <div class="detail-label">Hora:</div>
-                    <div class="detail-value">${time}</div>
+                    <div class="detail-value">${escapeHtml(time)}</div>
                 </div>
                 ${r.message ? `
                 <div class="detail-row">
                     <div class="detail-label">Mensaje:</div>
-                    <div class="detail-value">${r.message}</div>
+                    <div class="detail-value">${escapeHtml(r.message)}</div>
                 </div>
                 ` : ''}
                 <div class="detail-row">
                     <div class="detail-label">Estado:</div>
                     <div class="detail-value">
-                        <span class="status-badge status-${r.status}">
+                        <span class="status-badge status-${escapeHtml(r.status)}">
                             ${r.status === 'pending' ? 'Pendiente' : r.status === 'confirmed' ? 'Confirmada' : 'Cancelada'}
                         </span>
                     </div>
@@ -470,10 +472,10 @@ function initLogout() {
         logoutBtn.addEventListener('click', async () => {
             try {
                 await fetch('/backend/api/auth/logout', { method: 'POST', credentials: 'include' });
-                window.location.href = 'login.html';
+                window.location.href = 'login';
             } catch (error) {
                 console.error('Logout error:', error);
-                window.location.href = 'login.html';
+                window.location.href = 'login';
             }
         });
     }
@@ -493,12 +495,9 @@ function initSearch() {
 // Helper functions
 function formatDate(dateString) {
     if (!dateString) return '-';
-    const date = new Date(dateString);
-    return date.toLocaleDateString('es-CL', {
-        day: '2-digit',
-        month: '2-digit',
-        year: 'numeric'
-    });
+    const datePart = dateString.substring(0, 10);
+    const [year, month, day] = datePart.split('-').map(Number);
+    return `${day.toString().padStart(2, '0')}/${month.toString().padStart(2, '0')}/${year}`;
 }
 
 function formatServiceName(service) {
@@ -632,17 +631,7 @@ function initIntegrations() {
     if (connectBtn) {
         connectBtn.addEventListener('click', async () => {
             try {
-                const response = await fetch('/backend/api/google-calendar?action=auth-url', {
-                    method: 'POST',
-                    credentials: 'include'
-                });
-                const data = await response.json();
-
-                if (data.success && data.auth_url) {
-                    window.location.href = data.auth_url;
-                } else {
-                    showNotification(data.message || 'Error obteniendo URL de autorización', 'error');
-                }
+                window.location.href = '/backend/api/google-calendar/auth';
             } catch (error) {
                 console.error('Error getting auth URL:', error);
                 showNotification('Error de conexión con el servidor', 'error');
@@ -657,7 +646,7 @@ function initIntegrations() {
             }
 
             try {
-                const response = await fetch('/backend/api/google-calendar?action=disconnect', {
+                const response = await fetch('/backend/api/google-calendar/disconnect', {
                     method: 'POST',
                     credentials: 'include'
                 });
@@ -720,45 +709,31 @@ async function loadCalendarStatus() {
     if (!statusEl) return;
 
     try {
-        const response = await fetch('/backend/api/google-calendar?action=status', {
+        const response = await fetch('/backend/api/google-calendar/status', {
             credentials: 'include'
         });
         const data = await response.json();
 
-        // Mostrar URI de redirección
-        if (redirectUriEl && data.auth_url) {
-            const url = new URL(data.auth_url);
-            redirectUriEl.textContent = url.searchParams.get('redirect_uri') || '—';
-        }
+        redirectUriEl.textContent = 'https://sanacionconsciente.cl/backend/api/google-calendar/callback';
 
-        if (data.connected) {
+        if (data.data && data.data.connected) {
             statusEl.innerHTML = '<span class="status-badge status-confirmed">Conectado</span>';
             detailsEl.style.display = 'block';
             setupEl.style.display = 'none';
             connectBtn.style.display = 'none';
             disconnectBtn.style.display = 'inline-flex';
-            syncAllBtn.style.display = 'inline-flex';
+            if (syncAllBtn) syncAllBtn.style.display = 'none';
             badge.style.display = 'none';
 
             document.getElementById('calendarDetailStatus').textContent = 'Activo';
-            document.getElementById('calendarDetailExpires').textContent = data.expires_at
-                ? new Date(data.expires_at).toLocaleString('es-CL')
-                : '—';
-        } else if (data.configured) {
-            statusEl.innerHTML = '<span class="status-badge status-pending">Configurado, sin conectar</span>';
-            detailsEl.style.display = 'none';
-            setupEl.style.display = 'none';
-            connectBtn.style.display = 'inline-flex';
-            disconnectBtn.style.display = 'none';
-            syncAllBtn.style.display = 'none';
-            badge.style.display = 'inline-block';
+            document.getElementById('calendarDetailExpires').textContent = '—';
         } else {
-            statusEl.innerHTML = '<span class="status-badge status-disconnected">Sin configurar</span>';
+            statusEl.innerHTML = '<span class="status-badge status-disconnected">Sin conectar</span>';
             detailsEl.style.display = 'none';
             setupEl.style.display = 'block';
-            connectBtn.style.display = 'none';
+            connectBtn.style.display = 'inline-flex';
             disconnectBtn.style.display = 'none';
-            syncAllBtn.style.display = 'none';
+            if (syncAllBtn) syncAllBtn.style.display = 'none';
             badge.style.display = 'inline-block';
         }
     } catch (error) {
@@ -773,36 +748,36 @@ function createModalContent(r) {
     return `
         <div class="detail-row">
             <div class="detail-label">ID:</div>
-            <div class="detail-value">#${r.id}</div>
+            <div class="detail-value">#${escapeHtml(String(r.id))}</div>
         </div>
         <div class="detail-row">
             <div class="detail-label">Cliente:</div>
-            <div class="detail-value">${r.name}</div>
+            <div class="detail-value">${escapeHtml(r.name)}</div>
         </div>
         <div class="detail-row">
             <div class="detail-label">Email:</div>
-            <div class="detail-value">${r.email}</div>
+            <div class="detail-value">${escapeHtml(r.email)}</div>
         </div>
         <div class="detail-row">
             <div class="detail-label">Teléfono:</div>
-            <div class="detail-value">${r.phone}</div>
+            <div class="detail-value">${escapeHtml(r.phone)}</div>
         </div>
         <div class="detail-row">
             <div class="detail-label">Servicio:</div>
-            <div class="detail-value">${formatServiceName(r.service)}</div>
+            <div class="detail-value">${escapeHtml(formatServiceName(r.service))}</div>
         </div>
         <div class="detail-row">
             <div class="detail-label">Fecha:</div>
-            <div class="detail-value">${formatDate(r.reservation_date)}</div>
+            <div class="detail-value">${escapeHtml(formatDate(r.reservation_date))}</div>
         </div>
         <div class="detail-row">
             <div class="detail-label">Hora:</div>
-            <div class="detail-value">${time}</div>
+            <div class="detail-value">${escapeHtml(time)}</div>
         </div>
         <div class="detail-row">
             <div class="detail-label">Estado:</div>
             <div class="detail-value">
-                <span class="status-badge status-${r.status}">
+                <span class="status-badge status-${escapeHtml(r.status)}">
                     ${r.status === 'pending' ? 'Pendiente' : r.status === 'confirmed' ? 'Confirmada' : 'Cancelada'}
                 </span>
             </div>
@@ -849,6 +824,35 @@ function initBusinessHours() {
     modalCloses.forEach(btn => {
         btn.addEventListener('click', closeSpecialDayModal);
     });
+
+    // Event delegation para botones de dias festivos dinamicos
+    const specialDaysTableBody = document.getElementById('specialDaysTableBody');
+    if (specialDaysTableBody) {
+        specialDaysTableBody.addEventListener('click', (e) => {
+            const btn = e.target.closest('.btn-icon-edit, .btn-icon-delete');
+            if (!btn) return;
+            const id = parseInt(btn.dataset.id, 10);
+            if (!id) return;
+            if (btn.classList.contains('btn-icon-edit')) {
+                editSpecialDay(id);
+            } else if (btn.classList.contains('btn-icon-delete')) {
+                deleteSpecialDay(id);
+            }
+        });
+    }
+
+    // Event delegation para checkboxes de horarios semanales
+    const weeklyHoursContainer = document.getElementById('weeklyHoursContainer');
+    if (weeklyHoursContainer) {
+        weeklyHoursContainer.addEventListener('change', (e) => {
+            const cb = e.target.closest('[data-action="toggle-day"]');
+            if (!cb) return;
+            const day = parseInt(cb.dataset.day, 10);
+            if (!isNaN(day)) {
+                toggleDayHours(day);
+            }
+        });
+    }
 
     // Load hours data
     loadBusinessHours();
@@ -910,7 +914,7 @@ function renderWeeklyHours() {
                 <div class="checkbox-wrapper">
                     <input type="checkbox" id="isOpen_${day.day_of_week}"
                         ${day.is_open ? 'checked' : ''}
-                        onchange="toggleDayHours(${day.day_of_week})">
+                        data-action="toggle-day" data-day="${day.day_of_week}">
                     <span>Día de atención</span>
                 </div>
                 <div id="hours_${day.day_of_week}" style="${day.is_open ? '' : 'display: none;'}">
@@ -1033,7 +1037,8 @@ function renderSpecialDaysTable() {
 
     noData.style.display = 'none';
     tbody.innerHTML = specialDaysData.map(day => {
-        const dateObj = new Date(day.date + 'T00:00:00');
+        const [y, m, d] = day.date.substring(0, 10).split('-').map(Number);
+        const dateObj = new Date(y, m - 1, d);
         const dateFormatted = dateObj.toLocaleDateString('es-ES', { day: '2-digit', month: 'short', year: 'numeric' });
         const timeRange = day.is_open && day.open_time && day.close_time
             ? `${day.open_time.substring(0, 5)} - ${day.close_time.substring(0, 5)}`
@@ -1050,10 +1055,10 @@ function renderSpecialDaysTable() {
                 </td>
                 <td>${timeRange}</td>
                 <td class="special-day-actions">
-                    <button class="btn-icon btn-icon-edit" onclick="editSpecialDay(${day.id})">
+                    <button class="btn-icon btn-icon-edit" data-id="${day.id}">
                         <i class="fas fa-edit"></i>
                     </button>
-                    <button class="btn-icon btn-icon-delete" onclick="deleteSpecialDay(${day.id})">
+                    <button class="btn-icon btn-icon-delete" data-id="${day.id}">
                         <i class="fas fa-trash"></i>
                     </button>
                 </td>
@@ -1070,7 +1075,7 @@ function openSpecialDayModal(day = null) {
     if (day) {
         title.textContent = 'Editar Día Festivo';
         document.getElementById('specialDayId').value = day.id || '';
-        document.getElementById('specialDayDate').value = day.date || '';
+        document.getElementById('specialDayDate').value = day.date ? day.date.substring(0, 10) : '';
         document.getElementById('specialDayName').value = day.name || '';
         document.getElementById('specialDayIsOpen').checked = day.is_open || false;
         document.getElementById('specialDayOpenTime').value = day.open_time ? day.open_time.substring(0, 5) : '09:00';
@@ -1087,12 +1092,12 @@ function openSpecialDayModal(day = null) {
     }
 
     toggleSpecialDayHours();
-    modal.style.display = 'block';
+    modal.classList.add('active');
 }
 
 function closeSpecialDayModal() {
     const modal = document.getElementById('specialDayModal');
-    modal.style.display = 'none';
+    if (modal) modal.classList.remove('active');
 }
 
 function toggleSpecialDayHours() {
@@ -1178,6 +1183,640 @@ async function deleteSpecialDay(id) {
     } catch (error) {
         console.error('Error deleting special day:', error);
         showNotification('Error de conexión', 'error');
+    }
+}
+
+// ============================================
+// PROMOTIONS MANAGEMENT
+// ============================================
+
+let promotionsData = [];
+let serviceOptionsData = [];
+
+function initPromotions() {
+    console.log('[Admin] initPromotions');
+    const addBtn = document.getElementById('addPromotionBtn');
+    const saveBtn = document.getElementById('promotionModalSave');
+    const cancelBtn = document.getElementById('promotionModalCancel');
+    const closeBtn = document.getElementById('promotionModalClose');
+    const allCheckbox = document.getElementById('promoServiceAll');
+    const discountType = document.getElementById('promoDiscountType');
+
+    if (addBtn) {
+        addBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            console.log('[Admin] click addPromotionBtn');
+            openPromotionModal();
+        });
+        console.log('[Admin] addPromotionBtn listener OK');
+    } else {
+        console.warn('[Admin] addPromotionBtn NO encontrado');
+    }
+    if (saveBtn) {
+        saveBtn.addEventListener('click', savePromotion);
+    }
+    if (cancelBtn) {
+        cancelBtn.addEventListener('click', closePromotionModal);
+    }
+    if (closeBtn) {
+        closeBtn.addEventListener('click', closePromotionModal);
+    }
+    if (allCheckbox) {
+        allCheckbox.addEventListener('change', togglePromoServices);
+    }
+    if (discountType) {
+        discountType.addEventListener('change', updatePromoDiscountLabel);
+    }
+
+    // Event delegation para botones dinamicos de promociones
+    const promotionsList = document.getElementById('promotionsList');
+    if (promotionsList) {
+        promotionsList.addEventListener('click', function(e) {
+            console.log('[Admin] click en promotionsList, target:', e.target.tagName, e.target.className);
+            const btn = e.target.closest('.btn-icon-edit, .btn-icon-delete');
+            if (!btn) { console.log('[Admin] no es boton de editar/eliminar'); return; }
+            const id = parseInt(btn.dataset.id, 10);
+            console.log('[Admin] boton promo encontrado, id:', id, 'clase:', btn.className);
+            if (!id) return;
+            if (btn.classList.contains('btn-icon-edit')) {
+                editPromotion(id);
+            } else if (btn.classList.contains('btn-icon-delete')) {
+                deletePromotion(id);
+            }
+        });
+    }
+
+    // Close on outside click
+    const modal = document.getElementById('promotionModal');
+    if (modal) {
+        modal.addEventListener('click', function(e) {
+            if (e.target === modal) closePromotionModal();
+        });
+    }
+
+    loadPromotions();
+}
+
+async function loadPromotions() {
+    const list = document.getElementById('promotionsList');
+    const empty = document.getElementById('noPromotions');
+    if (!list) return;
+
+    list.innerHTML = '<div class="loading">Cargando promociones...</div>';
+
+    try {
+        const response = await fetch('/backend/api/promotions', { credentials: 'include' });
+        const data = await response.json();
+
+        if (data.success) {
+            promotionsData = data.data?.promotions || [];
+            serviceOptionsData = data.data?.serviceOptions || [];
+            renderPromotionsList();
+        } else {
+            list.innerHTML = '';
+            empty.style.display = 'block';
+        }
+    } catch (error) {
+        console.error('Error loading promotions:', error);
+        list.innerHTML = '';
+        empty.style.display = 'block';
+    }
+}
+
+function renderPromotionsList() {
+    const list = document.getElementById('promotionsList');
+    const empty = document.getElementById('noPromotions');
+    if (!list) return;
+
+    if (!promotionsData || promotionsData.length === 0) {
+        list.innerHTML = '';
+        empty.style.display = 'block';
+        return;
+    }
+
+    empty.style.display = 'none';
+    const today = new Date().toISOString().split('T')[0];
+
+    list.innerHTML = promotionsData.map(p => {
+        const isActive = p.is_active;
+        const isCurrent = p.start_date <= today && p.end_date >= today;
+        const servicesText = p.applicable_services === 'all'
+            ? 'Todos los servicios'
+            : (Array.isArray(p.applicable_services) ? p.applicable_services.length + ' servicios' : 'Servicios seleccionados');
+
+        const discountLabel = p.discount_type === 'percentage'
+            ? `${p.discount_value}% de descuento`
+            : `$${Number(p.price).toLocaleString('es-CL')} CLP`;
+
+        return `
+            <div class="promo-card ${isActive ? '' : 'inactive'}">
+                <div class="promo-card-header">
+                    <h3>${escapeHtml(p.name)}</h3>
+                    <span class="status-badge ${isActive ? 'status-confirmed' : 'status-disconnected'}">
+                        ${isActive ? 'Activa' : 'Inactiva'}
+                    </span>
+                </div>
+                <div class="promo-card-body">
+                    <p class="promo-price">${escapeHtml(discountLabel)}</p>
+                    <p class="promo-dates">${escapeHtml(formatDate(p.start_date))} — ${escapeHtml(formatDate(p.end_date))}</p>
+                    <p class="promo-services">${escapeHtml(servicesText)}</p>
+                    ${p.description ? `<p class="promo-desc">${escapeHtml(p.description)}</p>` : ''}
+                </div>
+                <div class="promo-card-actions">
+                    <button class="btn-icon btn-icon-edit" data-id="${p.id}" title="Editar">
+                        <i class="fas fa-edit"></i>
+                    </button>
+                    <button class="btn-icon btn-icon-delete" data-id="${p.id}" title="Eliminar">
+                        <i class="fas fa-trash"></i>
+                    </button>
+                </div>
+            </div>
+        `;
+    }).join('');
+}
+
+function openPromotionModal(promo = null) {
+    console.log('[Admin] openPromotionModal inicio', promo ? 'editando ID ' + promo.id : 'nueva');
+    try {
+        const modal = document.getElementById('promotionModal');
+        const title = document.getElementById('promotionModalTitle');
+        const form = document.getElementById('promotionForm');
+
+        if (!modal) { console.error('[Admin] modal no encontrado'); return; }
+        if (!form) { console.error('[Admin] form no encontrado'); return; }
+
+        form.reset();
+        togglePromoServices();
+
+        if (promo) {
+            title.textContent = 'Editar Promoción';
+            document.getElementById('promotionId').value = promo.id;
+            document.getElementById('promoName').value = promo.name || '';
+            document.getElementById('promoDescription').value = promo.description || '';
+            document.getElementById('promoDiscountType').value = promo.discount_type || 'fixed';
+            document.getElementById('promoDiscountValue').value = promo.discount_value || promo.price || '';
+            document.getElementById('promoStartDate').value = promo.start_date ? promo.start_date.substring(0, 10) : '';
+            document.getElementById('promoEndDate').value = promo.end_date ? promo.end_date.substring(0, 10) : '';
+            document.getElementById('promoActive').value = promo.is_active ? 'true' : 'false';
+
+            const allCheckbox = document.getElementById('promoServiceAll');
+            const serviceCheckboxes = document.querySelectorAll('.promo-service-item');
+
+            if (promo.applicable_services === 'all') {
+                allCheckbox.checked = true;
+                serviceCheckboxes.forEach(cb => cb.disabled = true);
+            } else {
+                allCheckbox.checked = false;
+                serviceCheckboxes.forEach(cb => {
+                    cb.disabled = false;
+                    const vals = Array.isArray(promo.applicable_services) ? promo.applicable_services : [];
+                    cb.checked = vals.includes(cb.value);
+                });
+            }
+        } else {
+            title.textContent = 'Nueva Promoción';
+            document.getElementById('promotionId').value = '';
+            document.getElementById('promoDiscountType').value = 'fixed';
+            document.getElementById('promoActive').value = 'true';
+            const allCheckbox = document.getElementById('promoServiceAll');
+            if (allCheckbox) allCheckbox.checked = true;
+            const serviceCheckboxes = document.querySelectorAll('.promo-service-item');
+            serviceCheckboxes.forEach(cb => { cb.checked = false; cb.disabled = true; });
+        }
+
+        updatePromoDiscountLabel();
+        modal.classList.add('active');
+        console.log('[Admin] modal activado con clase active');
+    } catch (err) {
+        console.error('[Admin] Error en openPromotionModal:', err);
+    }
+}
+
+function updatePromoDiscountLabel() {
+    const type = document.getElementById('promoDiscountType').value;
+    const label = document.getElementById('promoDiscountLabel');
+    const input = document.getElementById('promoDiscountValue');
+
+    if (type === 'percentage') {
+        label.textContent = 'Porcentaje de descuento (%) *';
+        input.placeholder = '25';
+        input.max = '100';
+    } else {
+        label.textContent = 'Precio promocional (CLP) *';
+        input.placeholder = '15000';
+        input.removeAttribute('max');
+    }
+}
+
+function closePromotionModal() {
+    const modal = document.getElementById('promotionModal');
+    if (modal) modal.classList.remove('active');
+}
+
+function togglePromoServices() {
+    const allChecked = document.getElementById('promoServiceAll').checked;
+    const items = document.querySelectorAll('.promo-service-item');
+    items.forEach(cb => {
+        cb.disabled = allChecked;
+        if (allChecked) cb.checked = false;
+    });
+}
+
+async function savePromotion() {
+    const id = document.getElementById('promotionId').value;
+    const name = document.getElementById('promoName').value.trim();
+    const description = document.getElementById('promoDescription').value.trim();
+    const discountType = document.getElementById('promoDiscountType').value;
+    const discountValue = parseInt(document.getElementById('promoDiscountValue').value, 10);
+    const startDate = document.getElementById('promoStartDate').value;
+    const endDate = document.getElementById('promoEndDate').value;
+    const isActive = document.getElementById('promoActive').value === 'true';
+
+    if (!name || !startDate || !endDate) {
+        showNotification('Nombre, fecha inicio y fecha fin son requeridos', 'error');
+        return;
+    }
+
+    if (isNaN(discountValue) || discountValue <= 0) {
+        showNotification(discountType === 'percentage' ? 'El porcentaje debe ser mayor a 0' : 'El precio debe ser mayor a 0', 'error');
+        return;
+    }
+
+    if (discountType === 'percentage' && discountValue > 100) {
+        showNotification('El porcentaje no puede ser mayor a 100', 'error');
+        return;
+    }
+
+    if (endDate < startDate) {
+        showNotification('La fecha de fin no puede ser anterior a la de inicio', 'error');
+        return;
+    }
+
+    const allChecked = document.getElementById('promoServiceAll').checked;
+    let applicableServices = 'all';
+    if (!allChecked) {
+        const checked = Array.from(document.querySelectorAll('.promo-service-item:checked')).map(cb => cb.value);
+        if (checked.length === 0) {
+            showNotification('Selecciona al menos un servicio o marca "Todos los servicios"', 'error');
+            return;
+        }
+        applicableServices = checked;
+    }
+
+    const payload = {
+        name,
+        description,
+        discount_type: discountType,
+        discount_value: discountValue,
+        start_date: startDate,
+        end_date: endDate,
+        is_active: isActive,
+        applicable_services: applicableServices,
+        serviceOptions: serviceOptionsData
+    };
+
+    const url = '/backend/api/promotions';
+    const method = id ? 'PUT' : 'POST';
+    if (id) payload.id = parseInt(id, 10);
+
+    const saveBtn = document.getElementById('promotionModalSave');
+    const originalText = saveBtn.innerHTML;
+    saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Guardando...';
+    saveBtn.disabled = true;
+
+    try {
+        const response = await fetch(url, {
+            method,
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify(payload)
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            showNotification(id ? 'Promoción actualizada' : 'Promoción creada', 'success');
+            closePromotionModal();
+            loadPromotions();
+        } else {
+            showNotification(data.message || 'Error al guardar', 'error');
+        }
+    } catch (error) {
+        console.error('Error saving promotion:', error);
+        showNotification('Error de conexión', 'error');
+    } finally {
+        saveBtn.innerHTML = originalText;
+        saveBtn.disabled = false;
+    }
+}
+
+function editPromotion(id) {
+    const promo = promotionsData.find(p => p.id === id);
+    if (promo) {
+        openPromotionModal(promo);
+    } else {
+        showNotification('Promoción no encontrada', 'error');
+    }
+}
+
+async function deletePromotion(id) {
+    if (!confirm('¿Estás seguro de eliminar esta promoción?')) return;
+
+    try {
+        const response = await fetch(`/backend/api/promotions?id=${id}`, {
+            method: 'DELETE',
+            credentials: 'include'
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            showNotification('Promoción eliminada', 'success');
+            loadPromotions();
+        } else {
+            showNotification(data.message || 'Error al eliminar', 'error');
+        }
+    } catch (error) {
+        console.error('Error deleting promotion:', error);
+        showNotification('Error de conexión', 'error');
+    }
+}
+
+window.editPromotion = editPromotion;
+window.deletePromotion = deletePromotion;
+
+// ============================================
+// MANUAL RESERVATIONS
+// ============================================
+
+function initManualReservation() {
+    console.log('[Admin] initManualReservation');
+    const newBtn = document.getElementById('newReservationBtn');
+    const saveBtn = document.getElementById('newReservationModalSave');
+    const cancelBtn = document.getElementById('newReservationModalCancel');
+    const closeBtn = document.getElementById('newReservationModalClose');
+    const serviceSelect = document.getElementById('manualService');
+    const dateInput = document.getElementById('manualDate');
+
+    if (newBtn) {
+        newBtn.addEventListener('click', function(e) {
+            e.preventDefault();
+            console.log('[Admin] click newReservationBtn');
+            openNewReservationModal();
+        });
+        console.log('[Admin] newReservationBtn listener OK');
+    } else {
+        console.warn('[Admin] newReservationBtn NO encontrado');
+    }
+    if (saveBtn) {
+        saveBtn.addEventListener('click', saveManualReservation);
+    }
+    if (cancelBtn) {
+        cancelBtn.addEventListener('click', closeNewReservationModal);
+    }
+    if (closeBtn) {
+        closeBtn.addEventListener('click', closeNewReservationModal);
+    }
+    if (serviceSelect && dateInput) {
+        serviceSelect.addEventListener('change', loadManualTimeSlots);
+        dateInput.addEventListener('change', loadManualTimeSlots);
+        serviceSelect.addEventListener('change', updateManualPriceInfo);
+        dateInput.addEventListener('change', updateManualPriceInfo);
+    }
+
+    const modal = document.getElementById('newReservationModal');
+    if (modal) {
+        modal.addEventListener('click', function(e) {
+            if (e.target === modal) closeNewReservationModal();
+        });
+    }
+}
+
+function openNewReservationModal() {
+    console.log('[Admin] openNewReservationModal inicio');
+    try {
+        const modal = document.getElementById('newReservationModal');
+        const form = document.getElementById('newReservationForm');
+        const dateInput = document.getElementById('manualDate');
+
+        if (!modal) { console.error('[Admin] newReservationModal no encontrado'); return; }
+        if (!form) { console.error('[Admin] newReservationForm no encontrado'); return; }
+
+        form.reset();
+
+        // Sin restriccion de fecha para admin (puede reservar cualquier dia)
+        if (dateInput) dateInput.removeAttribute('min');
+
+        // Reset horarios
+        const timeSelect = document.getElementById('manualTime');
+        if (timeSelect) {
+            timeSelect.innerHTML = '<option value="">Selecciona hora</option>';
+            timeSelect.disabled = true;
+        }
+
+        // Reset precio
+        const priceInfo = document.getElementById('manualPriceInfo');
+        if (priceInfo) priceInfo.style.display = 'none';
+
+        modal.classList.add('active');
+        console.log('[Admin] newReservationModal activado con clase active');
+    } catch (err) {
+        console.error('[Admin] Error en openNewReservationModal:', err);
+    }
+}
+
+function closeNewReservationModal() {
+    const modal = document.getElementById('newReservationModal');
+    if (modal) modal.classList.remove('active');
+}
+
+const MANUAL_SERVICE_DURATIONS = {
+    'relajante-espalda': 45,
+    'relajante-completo': 60,
+    'piedras-espalda': 45,
+    'piedras-completo': 60,
+    'aromaterapia-espalda': 30,
+    'aromaterapia-completo': 45
+};
+
+const MANUAL_REGULAR_PRICES = {
+    'relajante-espalda': 20000,
+    'relajante-completo': 30000,
+    'piedras-espalda': 30000,
+    'piedras-completo': 35000,
+    'aromaterapia-espalda': 25000,
+    'aromaterapia-completo': 30000
+};
+
+async function loadManualTimeSlots() {
+    const dateInput = document.getElementById('manualDate');
+    const serviceSelect = document.getElementById('manualService');
+    const timeSelect = document.getElementById('manualTime');
+
+    if (!dateInput || !serviceSelect || !timeSelect) return;
+
+    const date = dateInput.value;
+    const service = serviceSelect.value;
+
+    if (!date || !service) {
+        timeSelect.innerHTML = '<option value="">Selecciona hora</option>';
+        timeSelect.disabled = true;
+        return;
+    }
+
+    const duration = MANUAL_SERVICE_DURATIONS[service] || 60;
+    timeSelect.disabled = true;
+    timeSelect.innerHTML = '<option value="">Cargando horas...</option>';
+
+    try {
+        const response = await fetch(`/backend/api/business-hours?slots=1&date=${date}&duration=${duration}`);
+        const result = await response.json();
+
+        if (result.success && result.data && result.data.slots && result.data.slots.length > 0) {
+            timeSelect.innerHTML = '';
+            const defaultOpt = document.createElement('option');
+            defaultOpt.value = '';
+            defaultOpt.textContent = 'Selecciona hora';
+            timeSelect.appendChild(defaultOpt);
+
+            result.data.slots.forEach(slot => {
+                const timeLabel = slot.time.substring(0, 5);
+                const opt = document.createElement('option');
+                opt.value = timeLabel;
+                opt.textContent = timeLabel;
+                timeSelect.appendChild(opt);
+            });
+            timeSelect.disabled = false;
+        } else {
+            timeSelect.innerHTML = '';
+            const opt = document.createElement('option');
+            opt.value = '';
+            opt.textContent = 'No hay horas disponibles';
+            timeSelect.appendChild(opt);
+            timeSelect.disabled = true;
+        }
+    } catch (error) {
+        console.error('Error loading manual time slots:', error);
+        timeSelect.innerHTML = '';
+        const opt = document.createElement('option');
+        opt.value = '';
+        opt.textContent = 'Error cargando horarios';
+        timeSelect.appendChild(opt);
+        timeSelect.disabled = true;
+    }
+
+    updateManualPriceInfo();
+}
+
+async function updateManualPriceInfo() {
+    const serviceSelect = document.getElementById('manualService');
+    const dateInput = document.getElementById('manualDate');
+    const priceInfo = document.getElementById('manualPriceInfo');
+
+    if (!serviceSelect || !dateInput || !priceInfo) return;
+
+    const service = serviceSelect.value;
+    const date = dateInput.value;
+
+    if (!service || !date) {
+        priceInfo.style.display = 'none';
+        return;
+    }
+
+    try {
+        const response = await fetch(`/backend/api/promotions?date=${date}&service=${service}`);
+        const result = await response.json();
+
+        if (result.success && result.data && result.data.promotions && result.data.promotions.length > 0) {
+            const promo = result.data.promotions[0];
+            const regular = MANUAL_REGULAR_PRICES[service] || 0;
+
+            let finalPrice = promo.price;
+            let discountLabel = '';
+
+            if (promo.discount_type === 'percentage' && promo.discount_value > 0) {
+                finalPrice = Math.round(regular * (1 - promo.discount_value / 100));
+                discountLabel = `${promo.discount_value}% de descuento`;
+            }
+
+            const discount = regular - finalPrice;
+
+            priceInfo.innerHTML = `
+                <div style="background:#f0faf2; border-left:4px solid #4CAF7A; padding:0.75rem 1rem; border-radius:6px; font-size:0.9rem;">
+                    <strong style="color:#2d7a4f;">${escapeHtml(promo.name)}</strong>
+                    ${discountLabel ? `<span style="color:#c44d4d; font-size:0.85rem; margin-left:0.5rem;">(${escapeHtml(discountLabel)})</span>` : ''}<br>
+                    <span style="text-decoration:line-through; color:#888;">$${regular.toLocaleString('es-CL')}</span>
+                    <span style="color:#c44d4d; font-weight:bold;"> $${Number(finalPrice).toLocaleString('es-CL')} CLP</span>
+                    ${discount > 0 ? `<span style="color:#4CAF7A; font-size:0.85rem;"> Ahorra $${discount.toLocaleString('es-CL')}</span>` : ''}
+                </div>
+            `;
+            priceInfo.style.display = 'block';
+        } else {
+            priceInfo.style.display = 'none';
+        }
+    } catch (error) {
+        console.error('Error cargando precio promocional:', error);
+        priceInfo.style.display = 'none';
+    }
+}
+
+async function saveManualReservation() {
+    const name = document.getElementById('manualName').value.trim();
+    const email = document.getElementById('manualEmail').value.trim();
+    const phone = document.getElementById('manualPhone').value.trim();
+    const service = document.getElementById('manualService').value;
+    const date = document.getElementById('manualDate').value;
+    const time = document.getElementById('manualTime').value;
+    const message = document.getElementById('manualMessage').value.trim();
+
+    if (!name) {
+        showNotification('El nombre es obligatorio', 'error');
+        return;
+    }
+
+    const duration = service ? (MANUAL_SERVICE_DURATIONS[service] || 60) : 60;
+
+    const payload = {
+        name,
+        email: email || 'sin-email@local',
+        phone: phone || 'Sin teléfono',
+        service: service || 'relajante-completo',
+        date: date || new Date().toISOString().split('T')[0],
+        time: time || '10:00',
+        service_duration: duration,
+        message: message || '',
+        is_admin: true
+    };
+
+    const saveBtn = document.getElementById('newReservationModalSave');
+    const originalText = saveBtn.innerHTML;
+    saveBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Creando...';
+    saveBtn.disabled = true;
+
+    try {
+        const response = await fetch('/backend/api/reservations', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify(payload)
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            showNotification('Reserva creada exitosamente', 'success');
+            closeNewReservationModal();
+            loadReservations();
+            updateStats();
+        } else {
+            showNotification(data.message || 'Error al crear reserva', 'error');
+        }
+    } catch (error) {
+        console.error('Error creating manual reservation:', error);
+        showNotification('Error de conexión', 'error');
+    } finally {
+        saveBtn.innerHTML = originalText;
+        saveBtn.disabled = false;
     }
 }
 

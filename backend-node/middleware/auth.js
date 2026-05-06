@@ -4,11 +4,10 @@
 
 const bcrypt = require('bcryptjs');
 
-// Admin user (hardcoded, same as PHP version)
+// Admin credentials from environment (hash generated with bcrypt)
 const ADMIN_USER = {
-    username: 'Mabel',
-    // bcrypt hash of "204Mabel.3"
-    passwordHash: '$2a$10$lJit1iAM3QS.AdrrQ.n/beVbueQSlFUhosLVVMdDUDdZWM2T2NsGi'
+    username: process.env.ADMIN_USERNAME || 'Mabel',
+    passwordHash: process.env.ADMIN_PASSWORD_HASH || ''
 };
 
 /**
@@ -22,6 +21,11 @@ function checkAuth(req) {
  * Login middleware
  */
 async function login(req, username, password) {
+    if (!ADMIN_USER.passwordHash) {
+        console.error('ADMIN_PASSWORD_HASH no está configurado');
+        return false;
+    }
+
     if (username !== ADMIN_USER.username) {
         return false;
     }

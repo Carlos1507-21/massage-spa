@@ -74,7 +74,7 @@ const EmailTester = {
                         <div class="footer">
                             <p>📍 Detrás del Mall Quilín, Peñalolén<br>
                             📞 +56 9 8990 8321<br>
-                            ✉️ masajesanacionasa@gmail.com</p>
+                            ✉️ admin@tudominio.cl</p>
                         </div>
                     </div>
                 </body>
@@ -95,7 +95,7 @@ const EmailTester = {
             };
 
             return {
-                to: 'masajesanacionasa@gmail.com (Admin)',
+                to: 'admin@tudominio.cl (Admin)',
                 subject: '🔔 Nueva reserva recibida - Sanación Consciente ASA',
                 html: `
                 <!DOCTYPE html>
@@ -226,7 +226,7 @@ const EmailTester = {
 
         console.log('📧 Emails simulados enviados:');
         console.log('   1. Confirmación al cliente:', formData.email);
-        console.log('   2. Notificación al admin: masajesanacionasa@gmail.com');
+        console.log('   2. Notificación al admin: admin@tudominio.cl');
 
         return {
             success: true,

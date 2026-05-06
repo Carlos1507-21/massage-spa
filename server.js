@@ -25,10 +25,10 @@ app.use(helmet({
     contentSecurityPolicy: {
         directives: {
             defaultSrc: ["'self'"],
-            styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
-            fontSrc: ["'self'", "https://fonts.gstatic.com"],
+            styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com", "https://cdnjs.cloudflare.com"],
+            fontSrc: ["'self'", "https://fonts.gstatic.com", "https://cdnjs.cloudflare.com"],
             imgSrc: ["'self'", "data:", "blob:"],
-            scriptSrc: ["'self'", "'unsafe-inline'"],
+            scriptSrc: ["'self'", "https://static.cloudflareinsights.com"],
             connectSrc: ["'self'"]
         }
     },
@@ -51,6 +51,13 @@ const authLimiter = rateLimit({
 });
 app.use('/backend/api/auth/login', authLimiter);
 
+const reservationLimiter = rateLimit({
+    windowMs: 60 * 60 * 1000,
+    max: 10,
+    message: { success: false, message: 'Demasiadas reservas desde esta IP, intenta más tarde' }
+});
+app.use('/backend/api/reservations', reservationLimiter);
+
 // ============================================
 // MIDDLEWARE GLOBAL
 // ============================================
@@ -67,6 +74,11 @@ app.use(cors({
 app.use(express.json({ limit: '10kb' }));
 app.use(express.urlencoded({ extended: true, limit: '10kb' }));
 
+if (isProd && !process.env.SESSION_SECRET) {
+    console.error('FATAL: SESSION_SECRET no está definida en producción');
+    process.exit(1);
+}
+
 app.use(session({
     secret: process.env.SESSION_SECRET || 'dev-secret-cambiar-en-produccion',
     resave: false,
@@ -81,15 +93,36 @@ app.use(session({
 }));
 
 // ============================================
-// ARCHIVOS ESTÁTICOS
+// ARCHIVOS ESTÁTICOS Y RUTAS LIMPIAS
 // ============================================
 
-app.use('/frontend', express.static(path.join(__dirname, 'frontend')));
+// Redirect rutas antiguas /frontend/* a raíz
+app.get('/frontend*', (req, res) => {
+    const cleanPath = req.path.replace(/^\/frontend/, '') || '/';
+    res.redirect(301, cleanPath);
+});
+
+// Frontend servido desde raíz (URL limpia: / en vez de /frontend/index.html)
+app.use('/', express.static(path.join(__dirname, 'frontend'), { index: 'index.html' }));
+
+// Redirect rutas .html antiguas del admin a limpias
+app.get('/admin/login.html', (req, res) => res.redirect(301, '/admin/login'));
+app.get('/admin/dashboard.html', (req, res) => res.redirect(301, '/admin/dashboard'));
+
+// Admin estáticos (CSS, JS, imágenes)
 app.use('/admin', express.static(path.join(__dirname, 'admin')));
 
-app.get('/', (req, res) => {
-    res.redirect('/frontend/index.html');
+// Admin rutas limpias (sin .html)
+app.get('/admin/login', (req, res) => {
+    res.sendFile(path.join(__dirname, 'admin', 'login.html'));
 });
+app.get('/admin/dashboard', (req, res) => {
+    res.sendFile(path.join(__dirname, 'admin', 'dashboard.html'));
+});
+
+// Redirect /admin y /admin/ al login
+app.get('/admin', (req, res) => res.redirect(301, '/admin/login'));
+app.get('/admin/', (req, res) => res.redirect(301, '/admin/login'));
 
 // ============================================
 // RUTAS API
@@ -103,9 +136,10 @@ app.use('/backend/api', routes);
 
 app.use((err, req, res, next) => {
     console.error('Error:', err);
+    const message = isProd ? 'Error interno del servidor' : (err.message || 'Error interno del servidor');
     res.status(500).json({
         success: false,
-        message: err.message || 'Error interno del servidor'
+        message
     });
 });
 
@@ -116,7 +150,7 @@ app.use((err, req, res, next) => {
 app.listen(PORT, () => {
     console.log(`\n🌿 Sanación Consciente ASA - Servidor corriendo`);
     console.log(`   URL: http://localhost:${PORT}`);
-    console.log(`   Frontend: http://localhost:${PORT}/frontend/index.html`);
-    console.log(`   Admin: http://localhost:${PORT}/admin/login.html`);
+    console.log(`   Frontend: http://localhost:${PORT}/`);
+    console.log(`   Admin: http://localhost:${PORT}/admin/login`);
     console.log(`   API: http://localhost:${PORT}/backend/api\n`);
 });

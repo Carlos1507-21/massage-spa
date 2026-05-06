@@ -71,9 +71,9 @@ class Reservation {
             WHERE reservation_date = $1
             AND status != 'cancelled'
             AND (
-                reservation_time < $2::time + ($3 + $4) * interval '1 minute'
+                reservation_time < ($2::time + (interval '1 minute' * ($3::int + $4::int)))
                 AND
-                reservation_time + (COALESCE(service_duration, 60) + $4) * interval '1 minute' > $2::time
+                reservation_time + (interval '1 minute' * (COALESCE(service_duration, 60)::int + $4::int)) > $2::time
             )
         `;
         const result = await query(sql, [date, time, serviceDuration, prepTime]);

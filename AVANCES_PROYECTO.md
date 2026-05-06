@@ -1,6 +1,6 @@
 # 🌿 Sanación Consciente ASA - Registro de Avances del Proyecto
 
-**Fecha última actualización:** 2026-04-29
+**Fecha última actualización:** 2026-05-02
 **Estado:** Simplificado para negocio personal (una sola terapeuta a domicilio)
 **Migración:** PHP → Node.js/Express + PostgreSQL ✅ COMPLETADA
 **Próxima sesión:** Deploy a producción
@@ -285,12 +285,14 @@ Archivo: `frontend/index.html` (sección `.promociones`)
 
 ---
 
-## 🔐 SEGURIDAD REFORZADA (Pre-Deploy)
+## 🔐 SEGURIDAD REFORZADA (Mayo 2026)
 
 **Servidor (`server.js`):**
 - ✅ `helmet` - Headers de seguridad (CSP, HSTS, X-Frame-Options, etc.)
+- ✅ CSP endurecida: eliminado `'unsafe-inline'` de `scriptSrc` (scripts inline movidos a archivos externos)
 - ✅ `express-rate-limit` - Rate limiting general (100 req / 15 min)
 - ✅ Rate limiting específico para login (10 intentos / 15 min)
+- ✅ **Rate limiting específico para reservas** (10 req / hora por IP)
 - ✅ Session config mejorada:
   - `secure: true` en producción
   - `httpOnly: true`
@@ -298,12 +300,19 @@ Archivo: `frontend/index.html` (sección `.promociones`)
   - `name: 'sessionId'` (no default `connect.sid`)
 - ✅ Body parser limitado a 10kb (protección contra payloads enormes)
 - ✅ `trust proxy` en producción
+- ✅ **Aborta startup** si falta `SESSION_SECRET` en producción
+- ✅ **Error handler sanitizado**: en producción no revela `err.message` al cliente
 
 **Autenticación (`backend-node/middleware/auth.js`):**
-- ✅ Usuario cambiado: `Mabel` / `204Mabel.3`
-- ✅ Hash bcrypt actualizado
+- ✅ Usuario: `Mabel` (nombre configurable por `ADMIN_USERNAME`)
+- ✅ **Hash bcrypt movido a variable de entorno** (`ADMIN_PASSWORD_HASH`) — ya no está hardcodeado en el código fuente
+- ✅ Validación: login falla si `ADMIN_PASSWORD_HASH` no está configurado
 - ✅ Session destroy en logout
 - ✅ **Session regeneration** tras login exitoso (previene session fixation)
+
+**Autorización (`backend-node/routes/reservations.js`):**
+- ✅ **GET /reservations ahora requiere autenticación** (`requireAuth`) — ya no expone datos personales (PII) públicamente
+- ✅ Endpoints PUT/DELETE ya requerían auth, verificados
 
 **Validación de entrada (`backend-node/routes/reservations.js`):**
 - ✅ Sanitización básica de strings (`<`, `>` removidos)
@@ -318,35 +327,115 @@ Archivo: `frontend/index.html` (sección `.promociones`)
 - ✅ Validación de fecha y hora en query params
 - ✅ Validación de `duration` como entero positivo
 
-**Frontend (`frontend/js/main.js`):**
-- ✅ **Fix XSS**: `showNotification` usa `textContent` en lugar de `innerHTML` para mensajes dinámicos
+**Google Calendar (`backend-node/routes/googleCalendar.js`):**
+- ✅ **Fix XSS reflected**: parámetro `?error=` escapado antes de inyectar en HTML de respuesta
+- ✅ **Fix XSS reflected**: mensajes de error en callback escapados
 
-**Backend legacy PHP también actualizado** (por consistencia):
-- `backend/middleware/Auth.php`
-- `backend/api/auth.php`
+**Panel de administración (`admin/js/admin.js`):**
+- ✅ **Eliminado backdoor de demo mode**: si el servidor no responde, ya no redirige a `dashboard.html?demo=1`
+- ✅ **Eliminado skip de auth en `?demo=1`**: `checkAuth()` ahora siempre verifica sesión
+- ✅ **Función `escapeHtml()` global** en admin.js para sanitizar datos antes de inyectar en DOM
+- ✅ Todas las vistas de reservas (`createReservationRow`, `viewReservation`, `loadRecentReservations`, `loadUpcomingAppointments`, `createModalContent`) ahora escapan datos dinámicos
+
+**Frontend público (`frontend/js/main.js`):**
+- ✅ **Fix XSS**: `showNotification` usa `textContent` en lugar de `innerHTML` para mensajes dinámicos
+- ✅ **Población de selects segura**: `updateAvailableTimes()` y `populateFallbackTimes()` usan `document.createElement('option')` en lugar de `innerHTML` con strings concatenados
+
+**Producción:**
+- ✅ `email-tester.js` removido de `frontend/index.html` (script de desarrollo)
 
 ---
 
-## 🎯 Para la próxima sesión
+## 🧹 URLs LIMPIAS (Mayo 2026)
 
-**Deploy a producción:**
-- [ ] Configurar variables de entorno en servidor (`SESSION_SECRET`, DB credentials)
-- [ ] Configurar PostgreSQL en producción y ejecutar `npm run init-db`
-- [ ] Configurar Google Calendar API (credenciales OAuth)
-- [ ] Configurar SSL/HTTPS
-- [ ] Configurar proxy reverso (nginx) si aplica
-- [ ] Pruebas end-to-end del formulario de reservas con horarios dinámicos
-- [ ] Verificar que el bloqueo de duración + 30 min funciona correctamente en BD
+**Problema:** Las URLs mostraban subcarpetas y extensiones en la barra de direcciones (`/frontend/index.html`, `/admin/login.html`), poco profesional.
+
+**Solución implementada (`server.js`):**
+- ✅ **Frontend servido desde raíz**: `app.use('/', express.static(...))` con `index: 'index.html'`
+  - Antes: `https://sanacionconsciente.cl/frontend/index.html`
+  - Ahora: `https://sanacionconsciente.cl/`
+- ✅ **Redirect 301** de rutas antiguas `/frontend/*` a raíz (no rompe bookmarks)
+- ✅ **Admin sin `.html`**:
+  - Antes: `https://sanacionconsciente.cl/admin/login.html`
+  - Ahora: `https://sanacionconsciente.cl/admin/login`
+  - Rutas explícitas: `app.get('/admin/login')` sirve `admin/login.html` internamente
+- ✅ **Redirect 301** de `/admin/login.html` → `/admin/login` y `/admin/dashboard.html` → `/admin/dashboard`
+- ✅ **Redirect 301** de `/admin` y `/admin/` → `/admin/login`
+- ✅ **Assets del admin** siguen sirviendo desde `/admin/css/`, `/admin/js/` sin cambios
+
+**Frontend (`frontend/index.html`):**
+- ✅ Links relativos (`css/style.css`, `js/main.js`, `img/...`) funcionan automáticamente desde `/`
+
+**Admin (`admin/login.html`):**
+- ✅ Link "Volver al sitio web" cambiado de `../frontend/index.html` a `/`
+- ✅ Redirect post-login cambiado de `dashboard.html` a `dashboard`
+
+**Panel (`admin/js/admin.js`):**
+- ✅ `window.location.href = 'login.html'` → `'login'` (en `checkAuth()` y `initLogout()`)
+
+---
+
+## 📅 GOOGLE CALENDAR INTEGRACIÓN (Mayo 2026)
+
+**Estado:** Conectado y listo para usar
+
+**Configuración completada:**
+- ✅ Proyecto creado en Google Cloud Console
+- ✅ Google Calendar API habilitada
+- ✅ OAuth consent screen configurada (External, test user: admin@tudominio.cl)
+- ✅ OAuth 2.0 Client ID creado (Web application)
+- ✅ URI de redirección: `https://sanacionconsciente.cl/backend/api/google-calendar/callback`
+- ✅ Secrets seteados en Fly.io:
+  - `GOOGLE_CLIENT_ID`
+  - `GOOGLE_CLIENT_SECRET`
+  - `GOOGLE_REDIRECT_URI`
+  - `GOOGLE_CALENDAR_ID=primary`
+
+**Bugs corregidos:**
+- ✅ Panel admin (`admin/js/admin.js`): endpoints corregidos de `?action=...` a rutas REST (`/auth`, `/status`, `/disconnect`)
+- ✅ Links de callback HTML apuntan a `/` en lugar de `/frontend/index.html`
+- ✅ Botón "Conectar" ahora redirige directamente a `/backend/api/google-calendar/auth`
+
+**Flujo de conexión:**
+1. Ir a `https://sanacionconsciente.cl/admin/login`
+2. Sección **Integraciones**
+3. Click en **"Conectar con Google"**
+4. Autorizar con la cuenta de Google
+5. Listo. Las reservas nuevas se sincronizarán automáticamente.
+
+---
+
+## 🔧 INFRAESTRUCTURA Y DEPLOY (Mayo 2026)
+
+**Base de datos (Supabase PostgreSQL):**
+- ✅ Host: `db.oekptfbbzpqbwcfhzqdf.supabase.co`
+- ✅ Base de datos inicializada con `init-db.js` (tablas: reservations, contact_messages, google_calendar_tokens, business_hours, special_days, therapists, therapist_availability, therapist_unavailable_days)
+- ✅ Datos de seed insertados (horarios semanales: Lun-Vie 20:00-21:00, Sáb cerrado, Dom 08:00-18:00)
+
+**Servidor (Fly.io):**
+- ✅ App: `sanacion-consciente`
+- ✅ Región: `gru` (São Paulo)
+- ✅ Secrets configurados:
+  - `SESSION_SECRET`
+  - `ADMIN_USERNAME` / `ADMIN_PASSWORD_HASH`
+  - `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` / `GOOGLE_REDIRECT_URI` / `GOOGLE_CALENDAR_ID`
+  - `DB_HOST` / `DB_PORT` / `DB_NAME` / `DB_USER` / `DB_PASS`
+  - `NODE_ENV=production`
+- ✅ Deploy automatizado con `deploy.sh`
+
+**Verificación post-deploy:**
+- ✅ Login endpoint: `POST /backend/api/auth/login` → `{"success":true}`
+- ✅ Business hours endpoint: `GET /backend/api/business-hours` → devuelve horarios correctamente
+- ✅ Panel de admin accesible: `https://sanacionconsciente.cl/admin/login`
+- ✅ Frontend accesible: `https://sanacionconsciente.cl/`
 
 ---
 
 ## 📝 Notas importantes
 
-- El formulario de reservas ahora consulta la API para obtener slots disponibles antes de mostrar horas
-- Los horarios de lunes a viernes son muy restrictivos (solo 1 hora: 20:00-21:00), por lo que servicios de 45 o 60 min no caben allí debido al bloqueo de preparación
-- El número de teléfono real es +56 9 8990 8321
-- El panel de admin usa usuario `Mabel` (no `admin`)
-- Las credenciales de Google Calendar deben configurarse en `.env` antes de activar la integración
+- La base de datos PostgreSQL está en Supabase (host: `db.oekptfbbzpqbwcfhzqdf.supabase.co`)
+- Si necesitas reconectar Google Calendar, ir a `https://sanacionconsciente.cl/admin/login` → Integraciones → Conectar con Google
+- Para nuevos deploys, ejecutar `./deploy.sh` desde la carpeta `massage-spa`
 - El negocio es personal: una sola terapeuta que atiende masajes en su casa
 
 ---
@@ -372,6 +461,7 @@ Archivo: `frontend/index.html` (sección `.promociones`)
 | `backend/services/googleCalendar.js` | **Servicio de Google Calendar** |
 | `backend/config/init-db.js` | **Inicialización BD con horarios actualizados** |
 | `server.js` | **Servidor Express con seguridad** |
+| `deploy.sh` | **Script de deploy a Fly.io** |
 
 ---
 

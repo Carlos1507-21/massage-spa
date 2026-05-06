@@ -32,6 +32,13 @@
                     </a>
                 </li>
                 <li>
+                    <a href="#promotions" data-section="promotions">
+                        <i class="fas fa-tag"></i>
+                        <span>Promociones</span>
+                        <span class="badge" id="promoBadge" style="display:none;">!</span>
+                    </a>
+                </li>
+                <li>
                     <a href="#services" data-section="services">
                         <i class="fas fa-spa"></i>
                         <span>Servicios</span>
@@ -174,6 +181,10 @@
             <div class="section-header">
                 <h1>Gestión de Reservas</h1>
                 <div class="section-actions">
+                    <button class="btn-primary" id="newReservationBtn">
+                        <i class="fas fa-plus"></i>
+                        <span>Nueva Reserva</span>
+                    </button>
                     <select id="filterStatus" class="filter-select">
                         <option value="all">Todas las reservas</option>
                         <option value="pending">Pendientes</option>
@@ -224,6 +235,27 @@
                 <div class="coming-icon">🛠️</div>
                 <h2>En desarrollo</h2>
                 <p>Esta sección estará disponible próximamente</p>
+            </div>
+        </section>
+
+        <!-- Promotions Section -->
+        <section id="promotions-section" class="content-section">
+            <div class="section-header">
+                <h1>Promociones</h1>
+                <div class="section-actions">
+                    <button class="btn-primary" id="addPromotionBtn">
+                        <i class="fas fa-plus"></i>
+                        <span>Nueva Promoción</span>
+                    </button>
+                </div>
+            </div>
+            <div id="promotionsList" class="promotions-list">
+                <div class="loading">Cargando promociones...</div>
+            </div>
+            <div id="noPromotions" class="empty-state-container" style="display: none;">
+                <div class="empty-icon">🏷️</div>
+                <h3>No hay promociones</h3>
+                <p>Crea una promoción para ofrecer precios especiales</p>
             </div>
         </section>
 
@@ -375,7 +407,7 @@
     </main>
 
     <!-- Modal para día festivo -->
-    <div id="specialDayModal" class="modal" style="display: none;">
+    <div id="specialDayModal" class="modal">
         <div class="modal-content modal-medium">
             <div class="modal-header">
                 <h2 id="specialDayModalTitle">Agregar Día Festivo</h2>
@@ -434,7 +466,7 @@
     </div>
 
     <!-- Modal para ver detalles -->
-    <div id="reservationModal" class="modal" style="display: none;">
+    <div id="reservationModal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
                 <h2>Detalle de Reserva</h2>
@@ -446,6 +478,157 @@
             <div class="modal-footer">
                 <button class="btn-secondary" id="modalCancel">Cerrar</button>
                 <button class="btn-confirm" id="modalConfirm">Confirmar Reserva</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para nueva reserva manual -->
+    <div id="newReservationModal" class="modal">
+        <div class="modal-content modal-medium">
+            <div class="modal-header">
+                <h2>Nueva Reserva Manual</h2>
+                <button class="modal-close" id="newReservationModalClose">×</button>
+            </div>
+            <div class="modal-body">
+                <form id="newReservationForm">
+                    <div class="form-group">
+                        <label for="manualName">Nombre completo *</label>
+                        <input type="text" id="manualName" required class="form-control" placeholder="Nombre del cliente">
+                    </div>
+                    <div class="form-group">
+                        <label for="manualEmail">Correo electrónico</label>
+                        <input type="email" id="manualEmail" class="form-control" placeholder="cliente@email.com">
+                    </div>
+                    <div class="form-group">
+                        <label for="manualPhone">Teléfono</label>
+                        <input type="tel" id="manualPhone" class="form-control" placeholder="+56 9 XXXX XXXX">
+                    </div>
+                    <div class="form-group">
+                        <label for="manualService">Servicio</label>
+                        <select id="manualService" class="form-control">
+                            <option value="">Selecciona un servicio</option>
+                            <option value="relajante-espalda">Masaje Relajante (Espalda) — 45 min · $20.000</option>
+                            <option value="relajante-completo">Masaje Relajante (Cuerpo Completo) — 60 min · $30.000</option>
+                            <option value="piedras-espalda">Relajación + Piedras Calientes (Espalda) — 45 min · $30.000</option>
+                            <option value="piedras-completo">Relajación + Piedras Calientes (Cuerpo Completo) — 60 min · $35.000</option>
+                            <option value="aromaterapia-espalda">Aromaterapia (Espalda) — 30 min · $25.000</option>
+                            <option value="aromaterapia-completo">Aromaterapia (Cuerpo Completo) — 45 min · $30.000</option>
+                        </select>
+                        <div id="manualPriceInfo" class="price-info" style="display:none; margin-top:0.5rem;"></div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="manualDate">Fecha</label>
+                            <input type="date" id="manualDate" class="form-control">
+                        </div>
+                        <div class="form-group">
+                            <label for="manualTime">Hora</label>
+                            <select id="manualTime" class="form-control">
+                                <option value="">Selecciona hora</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label for="manualMessage">Mensaje</label>
+                        <textarea id="manualMessage" rows="2" class="form-control" placeholder="Notas internas..."></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" id="newReservationModalCancel">Cancelar</button>
+                <button class="btn-primary" id="newReservationModalSave">Crear Reserva</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal para promoción -->
+    <div id="promotionModal" class="modal">
+        <div class="modal-content modal-medium">
+            <div class="modal-header">
+                <h2 id="promotionModalTitle">Nueva Promoción</h2>
+                <button class="modal-close" id="promotionModalClose">×</button>
+            </div>
+            <div class="modal-body">
+                <form id="promotionForm">
+                    <input type="hidden" id="promotionId">
+                    <div class="form-group">
+                        <label for="promoName">Nombre de la promoción *</label>
+                        <input type="text" id="promoName" required class="form-control" placeholder="Ej: Día de la Madre">
+                    </div>
+                    <div class="form-group">
+                        <label for="promoDescription">Descripción</label>
+                        <textarea id="promoDescription" rows="2" class="form-control" placeholder="Descripción opcional"></textarea>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="promoDiscountType">Tipo de descuento *</label>
+                            <select id="promoDiscountType" class="form-control">
+                                <option value="fixed">Precio fijo</option>
+                                <option value="percentage">Porcentaje de descuento</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="promoDiscountValue" id="promoDiscountLabel">Precio promocional (CLP) *</label>
+                            <input type="number" id="promoDiscountValue" required class="form-control" min="1" max="100" placeholder="15000">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="promoActive">Estado</label>
+                            <select id="promoActive" class="form-control">
+                                <option value="true">Activa</option>
+                                <option value="false">Inactiva</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="promoStartDate">Fecha inicio *</label>
+                            <input type="date" id="promoStartDate" required class="form-control">
+                        </div>
+                        <div class="form-group">
+                            <label for="promoEndDate">Fecha fin *</label>
+                            <input type="date" id="promoEndDate" required class="form-control">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Servicios incluidos</label>
+                        <div class="checkbox-group" id="promoServicesGroup">
+                            <label class="checkbox-label">
+                                <input type="checkbox" value="all" id="promoServiceAll" checked>
+                                <span>Todos los servicios</span>
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" value="relajante-espalda" class="promo-service-item" disabled>
+                                <span>Masaje Relajante (Espalda)</span>
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" value="relajante-completo" class="promo-service-item" disabled>
+                                <span>Masaje Relajante (Cuerpo Completo)</span>
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" value="piedras-espalda" class="promo-service-item" disabled>
+                                <span>Piedras Calientes (Espalda)</span>
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" value="piedras-completo" class="promo-service-item" disabled>
+                                <span>Piedras Calientes (Cuerpo Completo)</span>
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" value="aromaterapia-espalda" class="promo-service-item" disabled>
+                                <span>Aromaterapia (Espalda)</span>
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" value="aromaterapia-completo" class="promo-service-item" disabled>
+                                <span>Aromaterapia (Cuerpo Completo)</span>
+                            </label>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" id="promotionModalCancel">Cancelar</button>
+                <button class="btn-primary" id="promotionModalSave">Guardar</button>
             </div>
         </div>
     </div>
