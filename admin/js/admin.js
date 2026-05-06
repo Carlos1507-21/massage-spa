@@ -141,10 +141,10 @@ async function updateStats() {
             document.getElementById('statToday').textContent = todayCount;
             document.getElementById('pendingCount').textContent = pending;
 
-            // Revenue basado en precios de servicios
+            // Revenue basado en precios de servicios (o precio manual si existe)
             let revenue = 0;
             reservations.filter(r => r.status === 'confirmed').forEach(r => {
-                revenue += (MANUAL_REGULAR_PRICES[r.service] || 0);
+                revenue += (r.price || MANUAL_REGULAR_PRICES[r.service] || 0);
             });
             document.getElementById('statRevenue').textContent = '$' + revenue.toLocaleString('es-CL');
 
@@ -345,6 +345,8 @@ async function viewReservation(id) {
         if (data.success && data.data) {
             const r = data.data;
             const time = r.reservation_time ? r.reservation_time.substring(0, 5) : '--:--';
+            const regularPrice = MANUAL_REGULAR_PRICES[r.service] || 0;
+            const currentPrice = r.price || regularPrice;
 
             const html = `
                 <div class="detail-row">
@@ -389,9 +391,35 @@ async function viewReservation(id) {
                         </span>
                     </div>
                 </div>
+                <hr style="margin:1rem 0; border:none; border-top:1px solid #eee;">
+                <div class="detail-row">
+                    <div class="detail-label">Precio:</div>
+                    <div class="detail-value" id="modalPriceSection">
+                        <div style="margin-bottom:0.5rem;">
+                            <strong>Precio actual:</strong> $${Number(currentPrice).toLocaleString('es-CL')} CLP
+                            ${r.price ? '<span style="color:#4CAF7A; font-size:0.85rem;">(modificado manualmente)</span>' : '<span style="color:#888; font-size:0.85rem;">(precio regular)</span>'}
+                        </div>
+                        <div id="modalPromoOptions" style="margin-bottom:0.5rem;"></div>
+                        <div style="display:flex; gap:0.5rem; align-items:center; flex-wrap:wrap;">
+                            <input type="number" id="modalPriceInput" value="${currentPrice}" min="0" step="500" class="form-control" style="width:120px;" placeholder="Precio CLP">
+                            <button class="btn-primary" id="modalSavePriceBtn" style="padding:0.4rem 0.8rem; font-size:0.85rem;">
+                                Guardar precio
+                            </button>
+                        </div>
+                    </div>
+                </div>
             `;
 
             document.getElementById('modalBody').innerHTML = html;
+
+            // Cargar promociones activas para esta fecha/servicio
+            await loadModalPromoOptions(r.id, r.service, r.reservation_date, regularPrice, currentPrice);
+
+            // Configurar botón guardar precio
+            const savePriceBtn = document.getElementById('modalSavePriceBtn');
+            if (savePriceBtn) {
+                savePriceBtn.addEventListener('click', () => saveReservationPrice(r.id));
+            }
 
             // Configurar botón confirmar del modal
             const confirmBtn = document.getElementById('modalConfirm');
@@ -434,6 +462,91 @@ async function updateReservationStatus(id, status) {
         }
     } catch (error) {
         console.error('Error updating status:', error);
+        showNotification('Error de conexión', 'error');
+    }
+}
+
+// Load active promotions for modal price editor
+async function loadModalPromoOptions(reservationId, service, date, regularPrice, currentPrice) {
+    const container = document.getElementById('modalPromoOptions');
+    if (!container) return;
+
+    try {
+        const response = await fetch(`/backend/api/promotions?date=${date}&service=${service}`);
+        const result = await response.json();
+
+        if (result.success && result.data && result.data.promotions && result.data.promotions.length > 0) {
+            const promo = result.data.promotions[0];
+            let promoPrice = promo.price;
+            let discountLabel = '';
+
+            if (promo.discount_type === 'percentage' && promo.discount_value > 0) {
+                promoPrice = Math.round(regularPrice * (1 - promo.discount_value / 100));
+                discountLabel = `${promo.discount_value}% de descuento`;
+            }
+
+            const isSelected = currentPrice === promoPrice;
+
+            container.innerHTML = `
+                <div style="background:#f0faf2; border-left:4px solid #4CAF7A; padding:0.5rem 0.75rem; border-radius:6px; font-size:0.85rem;"
+                     onclick="applyPromoPrice(${reservationId}, ${promoPrice})"
+                     style="cursor:pointer;"
+                >
+                    <strong style="color:#2d7a4f;">${escapeHtml(promo.name)}</strong>
+                    ${discountLabel ? `<span style="color:#c44d4d; font-size:0.8rem;">(${escapeHtml(discountLabel)})</span>` : ''}<br>
+                    <span style="text-decoration:line-through; color:#888;">$${regularPrice.toLocaleString('es-CL')}</span>
+                    <span style="color:#c44d4d; font-weight:bold;"> $${Number(promoPrice).toLocaleString('es-CL')} CLP</span>
+                    ${isSelected ? '<span style="color:#4CAF7A; font-weight:bold; margin-left:0.5rem;">✓ Aplicado</span>' : '<span style="color:#4CAF7A; margin-left:0.5rem; cursor:pointer; text-decoration:underline;">Aplicar</span>'}
+                </div>
+            `;
+        } else {
+            container.innerHTML = '';
+        }
+    } catch (error) {
+        console.error('Error cargando promociones para modal:', error);
+        container.innerHTML = '';
+    }
+}
+
+// Apply promotional price to reservation
+async function applyPromoPrice(id, price) {
+    const priceInput = document.getElementById('modalPriceInput');
+    if (priceInput) {
+        priceInput.value = price;
+    }
+    await saveReservationPrice(id);
+}
+
+// Save custom price for reservation
+async function saveReservationPrice(id) {
+    const priceInput = document.getElementById('modalPriceInput');
+    if (!priceInput) return;
+
+    const price = parseInt(priceInput.value);
+    if (isNaN(price) || price < 0) {
+        showNotification('Precio inválido', 'error');
+        return;
+    }
+
+    try {
+        const response = await fetch('/backend/api/reservations', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify({ id, price })
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            showNotification('Precio actualizado', 'success');
+            loadReservations();
+            updateStats();
+        } else {
+            showNotification(data.message || 'Error al actualizar precio', 'error');
+        }
+    } catch (error) {
+        console.error('Error saving price:', error);
         showNotification('Error de conexión', 'error');
     }
 }

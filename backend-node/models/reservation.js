@@ -8,8 +8,8 @@ class Reservation {
     // Crear nueva reserva
     async create(data) {
         const sql = `
-            INSERT INTO reservations (name, email, phone, service, service_duration, reservation_date, reservation_time, message, therapist_id, status)
-            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'pending')
+            INSERT INTO reservations (name, email, phone, service, service_duration, reservation_date, reservation_time, message, therapist_id, status, price)
+            VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, 'pending', $10)
             RETURNING id
         `;
         const result = await query(sql, [
@@ -21,7 +21,8 @@ class Reservation {
             data.date,
             data.time || null,
             data.message || null,
-            data.therapist_id || null
+            data.therapist_id || null,
+            data.price || null
         ]);
         return result.rows[0]?.id || null;
     }
@@ -122,6 +123,13 @@ class Reservation {
     async setCalendarEventId(id, eventId) {
         const sql = `UPDATE reservations SET calendar_event_id = $1 WHERE id = $2`;
         const result = await query(sql, [eventId, id]);
+        return result.rowCount > 0;
+    }
+
+    // Actualizar precio de reserva
+    async updatePrice(id, price) {
+        const sql = `UPDATE reservations SET price = $1 WHERE id = $2`;
+        const result = await query(sql, [price, id]);
         return result.rowCount > 0;
     }
 }

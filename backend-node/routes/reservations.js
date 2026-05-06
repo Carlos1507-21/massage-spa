@@ -232,39 +232,53 @@ router.post('/', async (req, res) => {
  */
 router.put('/', requireAuth, async (req, res) => {
     try {
-        const { id, status } = req.body;
+        const { id, status, price } = req.body;
 
-        if (!id || !status) {
-            return jsonResponse(res, false, 'ID y status son requeridos', null, 400);
+        if (!id) {
+            return jsonResponse(res, false, 'ID es requerido', null, 400);
         }
 
         if (!/^\d+$/.test(String(id))) {
             return jsonResponse(res, false, 'ID inválido', null, 400);
         }
 
-        const validStatuses = ['pending', 'confirmed', 'cancelled'];
-        if (!validStatuses.includes(status)) {
-            return jsonResponse(res, false, 'Estado no válido', null, 400);
+        const numericId = parseInt(id);
+        let updated = false;
+
+        // Actualizar estado si se proporciona
+        if (status) {
+            const validStatuses = ['pending', 'confirmed', 'cancelled'];
+            if (!validStatuses.includes(status)) {
+                return jsonResponse(res, false, 'Estado no válido', null, 400);
+            }
+            updated = await Reservation.updateStatus(numericId, status);
         }
 
-        const result = await Reservation.updateStatus(parseInt(id), status);
+        // Actualizar precio si se proporciona
+        if (price !== undefined && price !== null && price !== '') {
+            const priceNum = parseInt(price);
+            if (!isNaN(priceNum) && priceNum >= 0) {
+                await Reservation.updatePrice(numericId, priceNum);
+                updated = true;
+            }
+        }
 
-        if (result) {
+        if (updated) {
             // Sincronizar con Google Calendar
             try {
                 const connected = await googleCalendarService.isConnected();
                 if (connected) {
-                    const reservation = await Reservation.getById(id);
+                    const reservation = await Reservation.getById(numericId);
                     if (reservation) {
                         if (status === 'cancelled' && reservation.calendar_event_id) {
                             await googleCalendarService.deleteEvent(reservation.calendar_event_id);
-                            await Reservation.setCalendarEventId(id, null);
+                            await Reservation.setCalendarEventId(numericId, null);
                         } else if (status === 'confirmed') {
                             if (reservation.calendar_event_id) {
                                 await googleCalendarService.updateEvent(reservation.calendar_event_id, reservation);
                             } else if (reservation.reservation_date && reservation.reservation_time) {
                                 const eventId = await googleCalendarService.createEvent(reservation);
-                                await Reservation.setCalendarEventId(id, eventId);
+                                await Reservation.setCalendarEventId(numericId, eventId);
                             }
                         }
                     }

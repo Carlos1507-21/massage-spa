@@ -31,11 +31,15 @@ CREATE TABLE IF NOT EXISTS reservations (
     status VARCHAR(20) DEFAULT 'pending' CHECK (status IN ('pending', 'confirmed', 'cancelled')),
     therapist_id INTEGER,
     calendar_event_id VARCHAR(255),
+    price INTEGER,
     reminder_sent BOOLEAN DEFAULT FALSE,
     reminder_sent_at TIMESTAMP,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+-- Migración: agregar columna price si no existe (compatibilidad con BD existente)
+ALTER TABLE reservations ADD COLUMN IF NOT EXISTS price INTEGER;
 
 -- ============================================
 -- Tabla de mensajes de contacto
