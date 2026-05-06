@@ -166,14 +166,22 @@ async function isConnected() {
  */
 function getEventTimes(dateStr, timeStr, serviceKey) {
     const durationMinutes = SERVICE_DURATIONS[serviceKey] || 60;
+    const time = timeStr || '10:00';
 
-    const startDateTime = new Date(`${dateStr}T${timeStr || '10:00'}`);
-    const endDateTime = new Date(startDateTime.getTime() + durationMinutes * 60 * 1000);
+    // Construir dateTime manualmente para evitar conversiones de timezone del servidor
+    // Google Calendar interpreta esto con el timeZone proporcionado (America/Santiago)
+    const startDateTime = `${dateStr}T${time}:00`;
 
-    return {
-        start: startDateTime.toISOString(),
-        end: endDateTime.toISOString()
-    };
+    // Calcular hora de fin sumando minutos
+    const [hours, minutes] = time.split(':').map(Number);
+    const startTotalMinutes = hours * 60 + minutes;
+    const endTotalMinutes = startTotalMinutes + durationMinutes;
+    const endHours = Math.floor(endTotalMinutes / 60);
+    const endMinutes = endTotalMinutes % 60;
+    const endTime = `${String(endHours).padStart(2, '0')}:${String(endMinutes).padStart(2, '0')}`;
+    const endDateTime = `${dateStr}T${endTime}:00`;
+
+    return { start: startDateTime, end: endDateTime };
 }
 
 /**
