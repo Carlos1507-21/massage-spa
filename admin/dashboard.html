@@ -532,6 +532,16 @@
                         <label for="manualMessage">Mensaje</label>
                         <textarea id="manualMessage" rows="2" class="form-control" placeholder="Notas internas..."></textarea>
                     </div>
+                    <div class="form-group" style="margin-top:1rem; padding-top:1rem; border-top:1px solid #eee;">
+                        <label class="checkbox-label" style="margin-bottom:0.75rem; display:flex; align-items:center; gap:0.5rem; cursor:pointer;">
+                            <input type="checkbox" id="manualNoCost" value="1">
+                            <span><strong>Sin costo</strong> — Precio $0 CLP</span>
+                        </label>
+                        <div id="manualCustomPriceContainer" style="display:none; align-items:center; gap:0.5rem; flex-wrap:wrap;">
+                            <label for="manualPrice" style="font-size:0.9rem; color:#555;">Precio personalizado (CLP):</label>
+                            <input type="number" id="manualPrice" class="form-control" style="width:130px;" min="0" step="500" placeholder="15000">
+                        </div>
+                    </div>
                 </form>
             </div>
             <div class="modal-footer">

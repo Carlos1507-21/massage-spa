@@ -127,6 +127,14 @@ router.post('/', async (req, res) => {
                 message
             };
 
+            // Precio personalizado desde admin (0 o cualquier valor)
+            if (data.price !== undefined && data.price !== null && data.price !== '') {
+                const priceNum = parseInt(data.price, 10);
+                if (!isNaN(priceNum) && priceNum >= 0) {
+                    cleanData.price = priceNum;
+                }
+            }
+
             const id = await Reservation.create(cleanData);
             await syncReservationWithCalendar(id, cleanData);
             return jsonResponse(res, true, 'Reserva creada exitosamente', { id });

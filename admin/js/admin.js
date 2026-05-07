@@ -1700,6 +1700,22 @@ function initManualReservation() {
         dateInput.addEventListener('change', updateManualPriceInfo);
     }
 
+    // Checkbox "Sin costo"
+    const noCostCheckbox = document.getElementById('manualNoCost');
+    const customPriceContainer = document.getElementById('manualCustomPriceContainer');
+    const customPriceInput = document.getElementById('manualPrice');
+    if (noCostCheckbox && customPriceContainer) {
+        noCostCheckbox.addEventListener('change', function() {
+            if (this.checked) {
+                customPriceContainer.style.display = 'flex';
+                if (customPriceInput) customPriceInput.value = '0';
+            } else {
+                customPriceContainer.style.display = 'none';
+                if (customPriceInput) customPriceInput.value = '';
+            }
+        });
+    }
+
     const modal = document.getElementById('newReservationModal');
     if (modal) {
         modal.addEventListener('click', function(e) {
@@ -1733,6 +1749,14 @@ function openNewReservationModal() {
         // Reset precio
         const priceInfo = document.getElementById('manualPriceInfo');
         if (priceInfo) priceInfo.style.display = 'none';
+
+        // Reset sin costo
+        const noCostCheckbox = document.getElementById('manualNoCost');
+        const customPriceContainer = document.getElementById('manualCustomPriceContainer');
+        const customPriceInput = document.getElementById('manualPrice');
+        if (noCostCheckbox) noCostCheckbox.checked = false;
+        if (customPriceContainer) customPriceContainer.style.display = 'none';
+        if (customPriceInput) customPriceInput.value = '';
 
         modal.classList.add('active');
         console.log('[Admin] newReservationModal activado con clase active');
@@ -1884,6 +1908,8 @@ async function saveManualReservation() {
     const date = document.getElementById('manualDate').value;
     const time = document.getElementById('manualTime').value;
     const message = document.getElementById('manualMessage').value.trim();
+    const noCost = document.getElementById('manualNoCost');
+    const customPriceInput = document.getElementById('manualPrice');
 
     if (!name) {
         showNotification('El nombre es obligatorio', 'error');
@@ -1903,6 +1929,16 @@ async function saveManualReservation() {
         message: message || '',
         is_admin: true
     };
+
+    // Precio personalizado (0 o valor ingresado)
+    if (noCost && noCost.checked) {
+        payload.price = 0;
+    } else if (customPriceInput && customPriceInput.value !== '') {
+        const customPrice = parseInt(customPriceInput.value, 10);
+        if (!isNaN(customPrice) && customPrice >= 0) {
+            payload.price = customPrice;
+        }
+    }
 
     const saveBtn = document.getElementById('newReservationModalSave');
     const originalText = saveBtn.innerHTML;
