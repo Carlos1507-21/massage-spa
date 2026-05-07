@@ -240,7 +240,7 @@ router.post('/', async (req, res) => {
  */
 router.put('/', requireAuth, async (req, res) => {
     try {
-        const { id, status, price } = req.body;
+        const { id, status, price, name, email, phone, service, date, time, message } = req.body;
 
         if (!id) {
             return jsonResponse(res, false, 'ID es requerido', null, 400);
@@ -251,7 +251,47 @@ router.put('/', requireAuth, async (req, res) => {
         }
 
         const numericId = parseInt(id);
+        const reservation = await Reservation.getById(numericId);
+        if (!reservation) {
+            return jsonResponse(res, false, 'Reserva no encontrada', null, 404);
+        }
+
+        // Verificar si hay campos de edición completa
+        const hasEditFields = name !== undefined || email !== undefined || phone !== undefined ||
+                              service !== undefined || date !== undefined || time !== undefined ||
+                              message !== undefined;
+
         let updated = false;
+
+        if (hasEditFields) {
+            const updateData = {};
+            if (name !== undefined) updateData.name = sanitize(name);
+            if (email !== undefined) updateData.email = email.trim().toLowerCase();
+            if (phone !== undefined) updateData.phone = phone.trim();
+            if (service !== undefined) {
+                const s = service.trim();
+                if (!SERVICE_DURATIONS.hasOwnProperty(s)) {
+                    return jsonResponse(res, false, 'Servicio no válido', null, 400);
+                }
+                updateData.service = s;
+                updateData.service_duration = SERVICE_DURATIONS[s];
+            }
+            if (date !== undefined) {
+                if (!isValidDate(date)) {
+                    return jsonResponse(res, false, 'Fecha inválida', null, 400);
+                }
+                updateData.reservation_date = date;
+            }
+            if (time !== undefined) {
+                if (time !== null && time !== '' && !/^\d{2}:\d{2}$/.test(time)) {
+                    return jsonResponse(res, false, 'Hora inválida', null, 400);
+                }
+                updateData.reservation_time = time || null;
+            }
+            if (message !== undefined) updateData.message = message ? sanitize(message).substring(0, 500) : '';
+
+            updated = await Reservation.update(numericId, updateData);
+        }
 
         // Actualizar estado si se proporciona
         if (status) {
@@ -259,7 +299,8 @@ router.put('/', requireAuth, async (req, res) => {
             if (!validStatuses.includes(status)) {
                 return jsonResponse(res, false, 'Estado no válido', null, 400);
             }
-            updated = await Reservation.updateStatus(numericId, status);
+            const statusUpdated = await Reservation.updateStatus(numericId, status);
+            if (statusUpdated) updated = true;
         }
 
         // Actualizar precio si se proporciona
@@ -276,16 +317,16 @@ router.put('/', requireAuth, async (req, res) => {
             try {
                 const connected = await googleCalendarService.isConnected();
                 if (connected) {
-                    const reservation = await Reservation.getById(numericId);
-                    if (reservation) {
-                        if (status === 'cancelled' && reservation.calendar_event_id) {
-                            await googleCalendarService.deleteEvent(reservation.calendar_event_id);
+                    const updatedReservation = await Reservation.getById(numericId);
+                    if (updatedReservation) {
+                        if (status === 'cancelled' && updatedReservation.calendar_event_id) {
+                            await googleCalendarService.deleteEvent(updatedReservation.calendar_event_id);
                             await Reservation.setCalendarEventId(numericId, null);
-                        } else if (status === 'confirmed') {
-                            if (reservation.calendar_event_id) {
-                                await googleCalendarService.updateEvent(reservation.calendar_event_id, reservation);
-                            } else if (reservation.reservation_date && reservation.reservation_time) {
-                                const eventId = await googleCalendarService.createEvent(reservation);
+                        } else if (updatedReservation.status === 'confirmed') {
+                            if (updatedReservation.calendar_event_id) {
+                                await googleCalendarService.updateEvent(updatedReservation.calendar_event_id, updatedReservation);
+                            } else if (updatedReservation.reservation_date && updatedReservation.reservation_time) {
+                                const eventId = await googleCalendarService.createEvent(updatedReservation);
                                 await Reservation.setCalendarEventId(numericId, eventId);
                             }
                         }
@@ -298,7 +339,7 @@ router.put('/', requireAuth, async (req, res) => {
 
             return jsonResponse(res, true, 'Reserva actualizada');
         } else {
-            return jsonResponse(res, false, 'Error al actualizar', null, 500);
+            return jsonResponse(res, false, 'No se proporcionaron campos para actualizar', null, 400);
         }
     } catch (err) {
         console.error('Error en PUT /reservations:', err);

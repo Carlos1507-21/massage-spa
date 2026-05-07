@@ -344,100 +344,245 @@ async function viewReservation(id) {
 
         if (data.success && data.data) {
             const r = data.data;
-            const time = r.reservation_time ? r.reservation_time.substring(0, 5) : '--:--';
-            const regularPrice = MANUAL_REGULAR_PRICES[r.service] || 0;
-            const currentPrice = r.price || regularPrice;
-
-            const html = `
-                <div class="detail-row">
-                    <div class="detail-label">ID:</div>
-                    <div class="detail-value">#${escapeHtml(String(r.id))}</div>
-                </div>
-                <div class="detail-row">
-                    <div class="detail-label">Cliente:</div>
-                    <div class="detail-value">${escapeHtml(r.name)}</div>
-                </div>
-                <div class="detail-row">
-                    <div class="detail-label">Email:</div>
-                    <div class="detail-value">${escapeHtml(r.email)}</div>
-                </div>
-                <div class="detail-row">
-                    <div class="detail-label">Teléfono:</div>
-                    <div class="detail-value">${escapeHtml(r.phone)}</div>
-                </div>
-                <div class="detail-row">
-                    <div class="detail-label">Servicio:</div>
-                    <div class="detail-value">${escapeHtml(formatServiceName(r.service))}</div>
-                </div>
-                <div class="detail-row">
-                    <div class="detail-label">Fecha:</div>
-                    <div class="detail-value">${escapeHtml(formatDate(r.reservation_date))}</div>
-                </div>
-                <div class="detail-row">
-                    <div class="detail-label">Hora:</div>
-                    <div class="detail-value">${escapeHtml(time)}</div>
-                </div>
-                ${r.message ? `
-                <div class="detail-row">
-                    <div class="detail-label">Mensaje:</div>
-                    <div class="detail-value">${escapeHtml(r.message)}</div>
-                </div>
-                ` : ''}
-                <div class="detail-row">
-                    <div class="detail-label">Estado:</div>
-                    <div class="detail-value">
-                        <span class="status-badge status-${escapeHtml(r.status)}">
-                            ${r.status === 'pending' ? 'Pendiente' : r.status === 'confirmed' ? 'Confirmada' : 'Cancelada'}
-                        </span>
-                    </div>
-                </div>
-                <hr style="margin:1rem 0; border:none; border-top:1px solid #eee;">
-                <div class="detail-row">
-                    <div class="detail-label">Precio:</div>
-                    <div class="detail-value" id="modalPriceSection">
-                        <div style="margin-bottom:0.5rem;">
-                            <strong>Precio actual:</strong> $${Number(currentPrice).toLocaleString('es-CL')} CLP
-                            ${r.price ? '<span style="color:#4CAF7A; font-size:0.85rem;">(modificado manualmente)</span>' : '<span style="color:#888; font-size:0.85rem;">(precio regular)</span>'}
-                        </div>
-                        <div id="modalPromoOptions" style="margin-bottom:0.5rem;"></div>
-                        <div style="display:flex; gap:0.5rem; align-items:center; flex-wrap:wrap;">
-                            <input type="number" id="modalPriceInput" value="${currentPrice}" min="0" step="500" class="form-control" style="width:120px;" placeholder="Precio CLP">
-                            <button class="btn-primary" id="modalSavePriceBtn" style="padding:0.4rem 0.8rem; font-size:0.85rem;">
-                                Guardar precio
-                            </button>
-                        </div>
-                    </div>
-                </div>
-            `;
-
-            document.getElementById('modalBody').innerHTML = html;
-
-            // Cargar promociones activas para esta fecha/servicio
-            await loadModalPromoOptions(r.id, r.service, r.reservation_date, regularPrice, currentPrice);
-
-            // Configurar botón guardar precio
-            const savePriceBtn = document.getElementById('modalSavePriceBtn');
-            if (savePriceBtn) {
-                savePriceBtn.addEventListener('click', () => saveReservationPrice(r.id));
-            }
-
-            // Configurar botón confirmar del modal
-            const confirmBtn = document.getElementById('modalConfirm');
-            if (r.status === 'pending') {
-                confirmBtn.style.display = 'block';
-                confirmBtn.onclick = () => {
-                    updateReservationStatus(r.id, 'confirmed');
-                    closeModal();
-                };
-            } else {
-                confirmBtn.style.display = 'none';
-            }
-
-            openModal();
+            currentReservationData = r;
+            renderReservationView(r);
         }
     } catch (error) {
         console.error('Error viewing reservation:', error);
         showNotification('Error al cargar detalles', 'error');
+    }
+}
+
+function renderReservationView(r) {
+    const time = r.reservation_time ? r.reservation_time.substring(0, 5) : '--:--';
+    const regularPrice = MANUAL_REGULAR_PRICES[r.service] || 0;
+    const currentPrice = r.price || regularPrice;
+
+    const html = `
+        <div class="detail-row">
+            <div class="detail-label">ID:</div>
+            <div class="detail-value">#${escapeHtml(String(r.id))}</div>
+        </div>
+        <div class="detail-row">
+            <div class="detail-label">Cliente:</div>
+            <div class="detail-value">${escapeHtml(r.name)}</div>
+        </div>
+        <div class="detail-row">
+            <div class="detail-label">Email:</div>
+            <div class="detail-value">${escapeHtml(r.email)}</div>
+        </div>
+        <div class="detail-row">
+            <div class="detail-label">Teléfono:</div>
+            <div class="detail-value">${escapeHtml(r.phone)}</div>
+        </div>
+        <div class="detail-row">
+            <div class="detail-label">Servicio:</div>
+            <div class="detail-value">${escapeHtml(formatServiceName(r.service))}</div>
+        </div>
+        <div class="detail-row">
+            <div class="detail-label">Fecha:</div>
+            <div class="detail-value">${escapeHtml(formatDate(r.reservation_date))}</div>
+        </div>
+        <div class="detail-row">
+            <div class="detail-label">Hora:</div>
+            <div class="detail-value">${escapeHtml(time)}</div>
+        </div>
+        ${r.message ? `
+        <div class="detail-row">
+            <div class="detail-label">Mensaje:</div>
+            <div class="detail-value">${escapeHtml(r.message)}</div>
+        </div>
+        ` : ''}
+        <div class="detail-row">
+            <div class="detail-label">Estado:</div>
+            <div class="detail-value">
+                <span class="status-badge status-${escapeHtml(r.status)}">
+                    ${r.status === 'pending' ? 'Pendiente' : r.status === 'confirmed' ? 'Confirmada' : 'Cancelada'}
+                </span>
+            </div>
+        </div>
+        <hr style="margin:1rem 0; border:none; border-top:1px solid #eee;">
+        <div class="detail-row">
+            <div class="detail-label">Precio:</div>
+            <div class="detail-value" id="modalPriceSection">
+                <div style="margin-bottom:0.5rem;">
+                    <strong>Precio actual:</strong> $${Number(currentPrice).toLocaleString('es-CL')} CLP
+                    ${r.price ? '<span style="color:#4CAF7A; font-size:0.85rem;">(modificado manualmente)</span>' : '<span style="color:#888; font-size:0.85rem;">(precio regular)</span>'}
+                </div>
+                <div id="modalPromoOptions" style="margin-bottom:0.5rem;"></div>
+                <div style="display:flex; gap:0.5rem; align-items:center; flex-wrap:wrap;">
+                    <input type="number" id="modalPriceInput" value="${currentPrice}" min="0" step="500" class="form-control" style="width:120px;" placeholder="Precio CLP">
+                    <button class="btn-primary" id="modalSavePriceBtn" style="padding:0.4rem 0.8rem; font-size:0.85rem;">
+                        Guardar precio
+                    </button>
+                </div>
+            </div>
+        </div>
+    `;
+
+    document.getElementById('modalBody').innerHTML = html;
+
+    // Cargar promociones activas para esta fecha/servicio
+    loadModalPromoOptions(r.id, r.service, r.reservation_date, regularPrice, currentPrice);
+
+    // Configurar botón guardar precio
+    const savePriceBtn = document.getElementById('modalSavePriceBtn');
+    if (savePriceBtn) {
+        savePriceBtn.addEventListener('click', () => saveReservationPrice(r.id));
+    }
+
+    // Botones del footer
+    const confirmBtn = document.getElementById('modalConfirm');
+    const editBtn = document.getElementById('modalEdit');
+    const saveEditBtn = document.getElementById('modalSaveEdit');
+
+    if (confirmBtn) {
+        if (r.status === 'pending') {
+            confirmBtn.style.display = 'block';
+            confirmBtn.onclick = () => {
+                updateReservationStatus(r.id, 'confirmed');
+                closeModal();
+            };
+        } else {
+            confirmBtn.style.display = 'none';
+            confirmBtn.onclick = null;
+        }
+    }
+    if (editBtn) editBtn.style.display = 'block';
+    if (saveEditBtn) saveEditBtn.style.display = 'none';
+
+    openModal();
+}
+
+function renderReservationEditForm(r) {
+    const serviceOptions = [
+        { value: 'relajante-espalda', label: 'Masaje Relajante (Espalda) — 45 min · $20.000' },
+        { value: 'relajante-completo', label: 'Masaje Relajante (Cuerpo Completo) — 60 min · $30.000' },
+        { value: 'piedras-espalda', label: 'Relajación + Piedras Calientes (Espalda) — 45 min · $30.000' },
+        { value: 'piedras-completo', label: 'Relajación + Piedras Calientes (Cuerpo Completo) — 60 min · $35.000' },
+        { value: 'aromaterapia-espalda', label: 'Aromaterapia (Espalda) — 30 min · $25.000' },
+        { value: 'aromaterapia-completo', label: 'Aromaterapia (Cuerpo Completo) — 45 min · $30.000' }
+    ];
+
+    const serviceSelectHtml = serviceOptions.map(opt =>
+        `<option value="${opt.value}" ${r.service === opt.value ? 'selected' : ''}>${escapeHtml(opt.label)}</option>`
+    ).join('');
+
+    const html = `
+        <div class="form-group">
+            <label>Nombre completo</label>
+            <input type="text" id="editName" class="form-control" value="${escapeHtml(r.name)}">
+        </div>
+        <div class="form-group">
+            <label>Email</label>
+            <input type="email" id="editEmail" class="form-control" value="${escapeHtml(r.email)}">
+        </div>
+        <div class="form-group">
+            <label>Teléfono</label>
+            <input type="tel" id="editPhone" class="form-control" value="${escapeHtml(r.phone)}">
+        </div>
+        <div class="form-group">
+            <label>Servicio</label>
+            <select id="editService" class="form-control">${serviceSelectHtml}</select>
+        </div>
+        <div class="form-row">
+            <div class="form-group">
+                <label>Fecha</label>
+                <input type="date" id="editDate" class="form-control" value="${r.reservation_date}">
+            </div>
+            <div class="form-group">
+                <label>Hora</label>
+                <input type="time" id="editTime" class="form-control" value="${r.reservation_time ? r.reservation_time.substring(0, 5) : ''}">
+            </div>
+        </div>
+        <div class="form-group">
+            <label>Mensaje</label>
+            <textarea id="editMessage" rows="2" class="form-control">${escapeHtml(r.message || '')}</textarea>
+        </div>
+        <div class="form-group" style="margin-top:1rem; padding-top:1rem; border-top:1px solid #eee;">
+            <label>Precio (CLP)</label>
+            <div style="display:flex; gap:0.5rem; align-items:center;">
+                <input type="number" id="editPrice" class="form-control" style="width:140px;" value="${r.price || MANUAL_REGULAR_PRICES[r.service] || 0}" min="0" step="500">
+                <span style="font-size:0.85rem; color:#666;">Regular: $${Number(MANUAL_REGULAR_PRICES[r.service] || 0).toLocaleString('es-CL')}</span>
+            </div>
+        </div>
+    `;
+
+    document.getElementById('modalBody').innerHTML = html;
+
+    // Botones del footer
+    const confirmBtn = document.getElementById('modalConfirm');
+    const editBtn = document.getElementById('modalEdit');
+    const saveEditBtn = document.getElementById('modalSaveEdit');
+
+    if (confirmBtn) confirmBtn.style.display = 'none';
+    if (editBtn) editBtn.style.display = 'none';
+    if (saveEditBtn) saveEditBtn.style.display = 'block';
+}
+
+async function saveReservationEdit() {
+    if (!currentReservationData) return;
+
+    const id = currentReservationData.id;
+    const name = document.getElementById('editName')?.value.trim();
+    const email = document.getElementById('editEmail')?.value.trim();
+    const phone = document.getElementById('editPhone')?.value.trim();
+    const service = document.getElementById('editService')?.value;
+    const date = document.getElementById('editDate')?.value;
+    const time = document.getElementById('editTime')?.value;
+    const message = document.getElementById('editMessage')?.value.trim();
+    const price = document.getElementById('editPrice')?.value;
+
+    const payload = { id };
+    if (name !== undefined && name !== currentReservationData.name) payload.name = name;
+    if (email !== undefined && email !== currentReservationData.email) payload.email = email;
+    if (phone !== undefined && phone !== currentReservationData.phone) payload.phone = phone;
+    if (service !== undefined && service !== currentReservationData.service) payload.service = service;
+    if (date !== undefined && date !== currentReservationData.reservation_date) payload.date = date;
+    if (time !== undefined) {
+        const currentTime = currentReservationData.reservation_time ? currentReservationData.reservation_time.substring(0, 5) : '';
+        if (time !== currentTime) payload.time = time || null;
+    }
+    if (message !== undefined && message !== (currentReservationData.message || '')) payload.message = message;
+    if (price !== undefined) {
+        const priceNum = parseInt(price, 10);
+        if (!isNaN(priceNum) && priceNum >= 0 && priceNum !== (currentReservationData.price || MANUAL_REGULAR_PRICES[currentReservationData.service] || 0)) {
+            payload.price = priceNum;
+        }
+    }
+
+    if (Object.keys(payload).length === 1) {
+        showNotification('No hay cambios para guardar', 'info');
+        return;
+    }
+
+    try {
+        const response = await fetch('/backend/api/reservations', {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            credentials: 'include',
+            body: JSON.stringify(payload)
+        });
+
+        const data = await response.json();
+
+        if (data.success) {
+            showNotification('Reserva actualizada', 'success');
+            // Recargar datos y volver a modo vista
+            const refreshed = await fetch(`/backend/api/reservations?id=${id}`, { credentials: 'include' });
+            const refreshedData = await refreshed.json();
+            if (refreshedData.success && refreshedData.data) {
+                currentReservationData = refreshedData.data;
+                renderReservationView(currentReservationData);
+            }
+            loadReservations();
+            updateStats();
+        } else {
+            showNotification(data.message || 'Error al actualizar', 'error');
+        }
+    } catch (error) {
+        console.error('Error saving edit:', error);
+        showNotification('Error de conexión', 'error');
     }
 }
 
@@ -552,10 +697,14 @@ async function saveReservationPrice(id) {
 }
 
 // Modal functions
+let currentReservationData = null;
+
 function initModal() {
     const modal = document.getElementById('reservationModal');
     const closeBtn = document.querySelector('.modal-close');
     const cancelBtn = document.getElementById('modalCancel');
+    const editBtn = document.getElementById('modalEdit');
+    const saveEditBtn = document.getElementById('modalSaveEdit');
 
     if (closeBtn) {
         closeBtn.addEventListener('click', closeModal);
@@ -563,6 +712,18 @@ function initModal() {
 
     if (cancelBtn) {
         cancelBtn.addEventListener('click', closeModal);
+    }
+
+    if (editBtn) {
+        editBtn.addEventListener('click', () => {
+            if (currentReservationData) {
+                renderReservationEditForm(currentReservationData);
+            }
+        });
+    }
+
+    if (saveEditBtn) {
+        saveEditBtn.addEventListener('click', saveReservationEdit);
     }
 
     // Close on click outside

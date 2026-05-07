@@ -66,7 +66,7 @@ class Reservation {
 
     // Verificar disponibilidad considerando duración + preparación
     async checkAvailability(date, time, serviceDuration = 60) {
-        const prepTime = 30;
+        const prepTime = 15; // Reducido de 30 a 15 min para aprovechar mejor el tiempo
         const sql = `
             SELECT COUNT(*) as count FROM reservations
             WHERE reservation_date = $1
@@ -130,6 +130,31 @@ class Reservation {
     async updatePrice(id, price) {
         const sql = `UPDATE reservations SET price = $1 WHERE id = $2`;
         const result = await query(sql, [price, id]);
+        return result.rowCount > 0;
+    }
+
+    // Actualizar reserva completa (admin)
+    async update(id, data) {
+        const fields = [];
+        const values = [];
+        let paramIdx = 1;
+
+        if (data.name !== undefined) { fields.push(`name = $${paramIdx++}`); values.push(data.name); }
+        if (data.email !== undefined) { fields.push(`email = $${paramIdx++}`); values.push(data.email); }
+        if (data.phone !== undefined) { fields.push(`phone = $${paramIdx++}`); values.push(data.phone); }
+        if (data.service !== undefined) { fields.push(`service = $${paramIdx++}`); values.push(data.service); }
+        if (data.service_duration !== undefined) { fields.push(`service_duration = $${paramIdx++}`); values.push(data.service_duration); }
+        if (data.reservation_date !== undefined) { fields.push(`reservation_date = $${paramIdx++}`); values.push(data.reservation_date); }
+        if (data.reservation_time !== undefined) { fields.push(`reservation_time = $${paramIdx++}`); values.push(data.reservation_time); }
+        if (data.message !== undefined) { fields.push(`message = $${paramIdx++}`); values.push(data.message); }
+        if (data.status !== undefined) { fields.push(`status = $${paramIdx++}`); values.push(data.status); }
+        if (data.price !== undefined) { fields.push(`price = $${paramIdx++}`); values.push(data.price); }
+
+        if (fields.length === 0) return false;
+
+        values.push(id);
+        const sql = `UPDATE reservations SET ${fields.join(', ')}, updated_at = NOW() WHERE id = $${paramIdx}`;
+        const result = await query(sql, values);
         return result.rowCount > 0;
     }
 }
