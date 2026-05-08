@@ -424,5 +424,65 @@ function saveReservation(data) {
 // Exportar para uso global
 window.saveReservation = saveReservation;
 
+// Cargar horarios de atención desde la API
+async function loadBusinessHours() {
+    const display = document.getElementById('businessHoursDisplay');
+    if (!display) return;
+
+    try {
+        const response = await fetch('/backend/api/business-hours');
+        const result = await response.json();
+
+        if (result.success && result.data && result.data.businessHours) {
+            const hours = result.data.businessHours;
+            const lines = [];
+            const days = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
+
+            // Lun-Vie: agrupar consecutivos con mismos horarios
+            let currentGroup = null;
+            const groups = [];
+            for (let i = 1; i <= 5; i++) {
+                const day = hours.find(h => h.day_of_week === i);
+                if (day && day.is_open) {
+                    const timeStr = `${day.open_time.substring(0, 5)} - ${day.close_time.substring(0, 5)}`;
+                    if (currentGroup && currentGroup.time === timeStr) {
+                        currentGroup.endDay = days[i];
+                    } else {
+                        if (currentGroup) groups.push(currentGroup);
+                        currentGroup = { startDay: days[i], endDay: days[i], time: timeStr };
+                    }
+                }
+            }
+            if (currentGroup) groups.push(currentGroup);
+            groups.forEach(g => {
+                const dayLabel = g.startDay === g.endDay ? g.startDay : `${g.startDay} - ${g.endDay}`;
+                lines.push(`${dayLabel}: ${g.time}`);
+            });
+
+            // Sábado
+            const sat = hours.find(h => h.day_of_week === 6);
+            lines.push(sat && sat.is_open
+                ? `Sáb: ${sat.open_time.substring(0, 5)} - ${sat.close_time.substring(0, 5)}`
+                : 'Sáb: Sin sesiones');
+
+            // Domingo
+            const sun = hours.find(h => h.day_of_week === 0);
+            lines.push(sun && sun.is_open
+                ? `Dom: ${sun.open_time.substring(0, 5)} - ${sun.close_time.substring(0, 5)}`
+                : 'Dom: Sin sesiones');
+
+            display.innerHTML = lines.join('<br>');
+        } else {
+            display.innerHTML = 'Lun - Vie: 20:00 - 21:00<br>Sáb: Sin sesiones<br>Dom: 08:00 - 18:00';
+        }
+    } catch (error) {
+        console.error('Error cargando horarios:', error);
+        display.innerHTML = 'Lun - Vie: 20:00 - 21:00<br>Sáb: Sin sesiones<br>Dom: 08:00 - 18:00';
+    }
+}
+
+// Cargar horarios al iniciar
+loadBusinessHours();
+
 console.log('🌿 Sanación Consciente ASA - Bienvenido a tu oasis de tranquilidad');
 console.log('💡 Tip: Usa EmailTester.getInbox() en la consola para ver emails enviados');
