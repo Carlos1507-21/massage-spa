@@ -1140,8 +1140,12 @@ async function loadBusinessHours() {
         const response = await fetch('/backend/api/business-hours');
         const data = await response.json();
 
-        if (data.success) {
-            businessHoursData = data.businessHours || [];
+        if (data.success && data.data) {
+            businessHoursData = data.data.businessHours || [];
+            renderWeeklyHours();
+        } else {
+            console.warn('[Admin] API horarios: respuesta sin data', data);
+            businessHoursData = getDemoBusinessHours();
             renderWeeklyHours();
         }
 
@@ -1149,8 +1153,11 @@ async function loadBusinessHours() {
         const specialResponse = await fetch('/backend/api/business-hours?special_days=1');
         const specialData = await specialResponse.json();
 
-        if (specialData.success) {
-            specialDaysData = specialData.specialDays || [];
+        if (specialData.success && specialData.data) {
+            specialDaysData = specialData.data.specialDays || [];
+            renderSpecialDaysTable();
+        } else {
+            specialDaysData = [];
             renderSpecialDaysTable();
         }
     } catch (error) {
@@ -1178,6 +1185,15 @@ function getDemoBusinessHours() {
 function renderWeeklyHours() {
     const container = document.getElementById('weeklyHoursContainer');
     if (!container) return;
+
+    if (!businessHoursData || businessHoursData.length === 0) {
+        container.innerHTML = `<div class="empty-state" style="grid-column: 1 / -1;">
+            <div class="empty-icon">📭</div>
+            <h3>No hay horarios configurados</h3>
+            <p>Los horarios semanales se cargarán automáticamente</p>
+        </div>`;
+        return;
+    }
 
     container.innerHTML = businessHoursData.map(day => `
         <div class="hour-card ${!day.is_open ? 'closed' : ''}" data-day="${day.day_of_week}">
