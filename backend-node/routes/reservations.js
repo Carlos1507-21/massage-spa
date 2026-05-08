@@ -322,7 +322,7 @@ router.put('/', requireAuth, async (req, res) => {
                         if (status === 'cancelled' && updatedReservation.calendar_event_id) {
                             await googleCalendarService.deleteEvent(updatedReservation.calendar_event_id);
                             await Reservation.setCalendarEventId(numericId, null);
-                        } else if (updatedReservation.status === 'confirmed') {
+                        } else if (updatedReservation.status === 'confirmed' || updatedReservation.status === 'pending') {
                             if (updatedReservation.calendar_event_id) {
                                 await googleCalendarService.updateEvent(updatedReservation.calendar_event_id, updatedReservation);
                             } else if (updatedReservation.reservation_date && updatedReservation.reservation_time) {
